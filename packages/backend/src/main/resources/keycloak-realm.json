@@ -6,7 +6,7 @@
             "id": "b025a9d1-1457-49c7-9642-7c2dfd01ad7f",
             "clientId": "backend",
             "name": "Autorisation de connection à un service web",
-            "rootUrl": "http://localhost:8180",
+            "rootUrl": "http://localhost:8080",
             "adminUrl": "",
             "baseUrl": "/",
             "surrogateAuthRequired": false,
