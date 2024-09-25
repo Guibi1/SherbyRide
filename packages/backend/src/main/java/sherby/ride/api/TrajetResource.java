@@ -1,5 +1,6 @@
 package sherby.ride.api;
 
+import jakarta.ws.rs.core.Response;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
@@ -21,6 +22,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import sherby.ride.db.Trajet;
 
+
 @Path("trajet")
 @ApplicationScoped
 @Produces("application/json")
@@ -39,8 +41,27 @@ public class TrajetResource {
         return Trajet.findById(id);
     }
 
+    @POST
     @Transactional
-    public void create(Trajet trajet) {
-        ValidationMode.notblank(Trajet.getDepartureLoc, "You must enter a departure location");
+    public Uni<Response> create(Trajet trajet) {
+        
+        if (trajet.getDepartureLoc() == null || trajet.getDepartureLoc().isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+               .entity("You must enter a departure location").build());
+        }
+
+        if (trajet.getArrivalLoc() == null || trajet.getArrivalLoc().isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+               .entity("You must enter a arrival location").build());
+        }
+
+        if (trajet.getDepartureTime() == null) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+               .entity("You must enter a arrival location").build());
+        }
+
+
+        return trajet.persist().replaceWith(Response.status(CREATED).entity(trajet).build());
     }
+    
 }
