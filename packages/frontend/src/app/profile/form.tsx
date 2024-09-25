@@ -6,13 +6,19 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { User } from "next-auth";
+import { getSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
 export default function Form({ user }: { user: User }) {
     const [phone, setPhone] = useState("");
 
-    const handleSave = () => {
-        // fetch("/Profile", {method:"PUT"}, {user: user.name, user.})
+    const handleSave = async () => {
+        const session = await getSession();
+        const res = await fetch("http://localhost:8080/profile", {
+            method: "PUT",
+            headers: { Authorization: `Bearer ${session?.accessToken}` },
+            body: JSON.stringify({ cip: session?.user.cip, nom: user.name, email: user.email, phone }),
+        });
 
         console.log("Profile saved:", { user: user.name, email: user.email, phone });
     };

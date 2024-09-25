@@ -24,15 +24,15 @@ export default async function NavBar() {
 
             <nav className="ml-auto flex gap-4 sm:gap-6">
                 <Link href="/rides" className="text-sm font-medium hover:underline underline-offset-4">
-                    Find a Ride
+                    Trouve un déplacement
                 </Link>
 
                 <Link href="" className="text-sm font-medium hover:underline underline-offset-4">
-                    Offer a Ride
+                    Offre un déplacement
                 </Link>
 
                 <Link href="" className="text-sm font-medium hover:underline underline-offset-4">
-                    How It Works
+                    Comment sa marche
                 </Link>
             </nav>
 
@@ -79,7 +79,7 @@ export default async function NavBar() {
                         await signIn("keycloak");
                     }}
                 >
-                    <Button type="submit">Login</Button>
+                    <Button type="submit">Connexion</Button>
                 </form>
             )}
         </header>
