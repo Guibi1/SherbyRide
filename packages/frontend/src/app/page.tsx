@@ -25,7 +25,7 @@ export default async function HomePage() {
 
                             <Button type="submit">
                                 <SearchIcon className="h-4 w-4" />
-                                <span className="sr-only">Search</span>
+                                <span className="sr-only">Recherche</span>
                             </Button>
                         </form>
                     </div>
