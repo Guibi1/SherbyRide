@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getProfile } from "@/lib/api";
 import type { User } from "@/lib/auth";
 import { type Faculty, faculties } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getSession } from "next-auth/react";
+import { redirect, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -18,6 +18,7 @@ const formSchema = z.object({
 });
 
 export default function ProfileCreationForm({ user }: { user: User }) {
+    const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -40,7 +41,10 @@ export default function ProfileCreationForm({ user }: { user: User }) {
                 faculty: values.faculty,
             }),
         });
-        await getProfile();
+
+        if (res.ok) {
+            router.refresh();
+        }
     }
 
     return (

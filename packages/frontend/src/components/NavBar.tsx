@@ -76,7 +76,7 @@ export default async function NavBar() {
                 <form
                     action={async () => {
                         "use server";
-                        await signIn("keycloak");
+                        await signIn("keycloak", { redirectTo: "/create-profile" });
                     }}
                 >
                     <Button type="submit">Connexion</Button>
