@@ -5,15 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { auth } from "@/lib/auth";
 import type { User } from "next-auth";
 import { useEffect, useState } from "react";
 
 export default function Form({ user }: { user: User }) {
-    const [phone, setPhone] = useState(" ");
+    const [phone, setPhone] = useState("");
 
     const handleSave = () => {
-        // Simule l'enregistrement des données
+        // fetch("/Profile", {method:"PUT"}, {user: user.name, user.})
+
         console.log("Profile saved:", { user: user.name, email: user.email, phone });
     };
 

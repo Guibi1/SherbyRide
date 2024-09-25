@@ -9,7 +9,6 @@ export default async function ProfilePage() {
 
     return (
         <>
-            <div>hey c'Est server</div>
             <Form user={session?.user} />
         </>
     );

@@ -32,7 +32,7 @@ public class ProfileResource {
     // POST - Crée un nouveau profil
     @POST
     public Uni<Response> createProfile(Profile profile) {
-        if (profile == null || profile.cip == userInfo.getSubject()) {
+        if (profile == null || profile.cip == userInfo.getPreferredUserName()) {
             throw new WebApplicationException("Bad request.", 422);
         }
 

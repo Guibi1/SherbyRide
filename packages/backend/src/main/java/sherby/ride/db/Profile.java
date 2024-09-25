@@ -16,7 +16,9 @@ public class Profile extends PanacheEntityBase {
     @Id
     @Column(length = 8, unique = true)
     public String cip;
-
+    
+    public String nom;
+    public String email;
     public String phone;
 
     @Enumerated(EnumType.STRING) // Sauvegarde l'énumération en tant que String dans la base de données
