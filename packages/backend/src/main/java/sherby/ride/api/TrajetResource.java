@@ -5,6 +5,7 @@ import static jakarta.ws.rs.core.Response.Status.CREATED;
 import java.util.Date;
 import java.util.List;
 
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -42,20 +43,21 @@ public class TrajetResource {
 
         if (trajet.departureLoc == null || trajet.departureLoc.isEmpty()) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("You must enter a departure location").build());
+                    .entity("Vous devez entrer un lieu de départ").build());
         }
 
         if (trajet.arrivalLoc == null || trajet.arrivalLoc.isEmpty()) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("You must enter a arrival location").build());
+                    .entity("Vous devez entrer un lieu d'arrivée").build());
         }
 
         if (trajet.departureTime == null || trajet.departureTime.before(new Date())) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("You must enter a arrival location").build());
+                    .entity("Vous devez entrer un lieu d'arrivée").build());
         }
 
-        return trajet.persist().replaceWith(Response.status(CREATED).entity(trajet).build());
+        return Panache.withTransaction(trajet::persist)
+                .replaceWith(Response.ok(trajet).status(CREATED)::build);
     }
 
 }
