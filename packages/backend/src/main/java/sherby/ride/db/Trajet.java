@@ -32,6 +32,9 @@ public class Trajet extends PanacheEntity {
 
     // Methods
 
+    public Trajet() {
+    }
+
     public String getDepartureLoc() {
         return departureLoc;
     }
@@ -45,7 +48,7 @@ public class Trajet extends PanacheEntity {
     }
 
     public void setArrivalLoc(String loc) {
-        this.departureLoc = loc;;
+        this.arrivalLoc = loc;;
     }
 
     public Date getDepartureTime() {
@@ -64,13 +67,13 @@ public class Trajet extends PanacheEntity {
         this.maxPassagers = nbPassengers;
     }
 
-    public Uni<List<PanacheEntity>> findByarrivalLoc(String arrivalLoc) {
-        return list("arrivalLoc", arrivalLoc);
-    }
-
-    public Uni<List<PanacheEntity>> findBydepartureLoc(String departureLoc) {
+    public Uni<List<Trajet>> findBydepartureLoc(String departureLoc) {
         return list("departureLoc", departureLoc);
     }
+
+    public Uni<List<Trajet>> findByarrivalLoc(String arrivalLoc) {
+        return list("arrivalLoc", arrivalLoc);
+    }      
 
     public Uni<List<PanacheEntity>> findBydepartureTime(String departureTime) {
         return list("departureTime", departureTime);
