@@ -22,25 +22,29 @@ public class ProfileResource {
     @Inject
     UserInfo userInfo;
 
-    // GET - Récupère un profil par CIP
+    @GET
+    public Uni<Response> getCurrentProfile() {
+        return Profile.findById(userInfo.getPreferredUserName())
+                .onItem().ifNotNull().transform(p -> Response.ok(p).build())
+                .onItem().ifNull().continueWith(Response.ok().status(NOT_FOUND)::build);
+    }
+
     @GET
     @Path("/{cip}")
     public Uni<Profile> getProfile(@PathParam("cip") String cip) {
         return Profile.findById(cip);
     }
 
-    // POST - Crée un nouveau profil
     @POST
     public Uni<Response> createProfile(Profile profile) {
-        if (profile == null || profile.cip == userInfo.getPreferredUserName()) {
-            throw new WebApplicationException("Bad request.", 422);
+        if (profile == null || !profile.cip.equals(userInfo.getPreferredUserName())) {
+            throw new WebApplicationException("Bad request." + userInfo.getPreferredUserName() + profile.cip, 422);
         }
 
         return Panache.withTransaction(profile::persist)
                 .replaceWith(Response.ok(profile).status(CREATED)::build);
     }
 
-    // PUT - Met à jour un profil existant
     @PUT
     @Path("/{cip}")
     public Uni<Response> updateProfile(@PathParam("cip") String cip, Profile profile) {

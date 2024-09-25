@@ -1,22 +1,22 @@
 import { isServer } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import { auth } from "./auth";
+import type { Profile } from "./types";
 
-export async function fetchUserInfo() {
+export async function getProfile() {
     const session = isServer ? await auth() : await getSession();
-    console.log("🚀 ~ fetchUserInfo ~ session:", session?.user.cip);
-
+    if (!session) return null;
     const token = session?.accessToken;
-    console.log("🚀 ~ fetchUserInfo ~ token:", token);
 
-    const res = await fetch("http://localhost:8080/hello", {
-        headers: { Authorization: `Bearer ${token}` },
+    const res = await fetch("http://localhost:8080/profile", {
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
 
-    if (res.ok) {
-        const json = await res.text();
-        console.log("🚀 ~ fetchUserInfo ~ json:", json);
-    } else {
-        console.log("FETCH NOT OK");
+    if (!res.ok) {
+        console.log("FETCH NOT OK", res.status);
+        return null;
     }
+
+    const json = await res.json();
+    return json as Profile;
 }

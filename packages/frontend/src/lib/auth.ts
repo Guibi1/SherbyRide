@@ -4,15 +4,17 @@ import Keycloak from "next-auth/providers/keycloak";
 export const { handlers, signIn, signOut, auth } = NextAuth({
     providers: [
         Keycloak({
-            profile: (u) => ({
-                id: u.id,
-                cip: u.preferred_username,
-                name: u.name,
-                givenName: u.given_name,
-                familyName: u.family_name,
-                email: u.email,
-                emailVerified: u.email_verified,
-            }),
+            profile: async (u) => {
+                return {
+                    id: u.id,
+                    cip: u.preferred_username,
+                    name: u.name,
+                    givenName: u.given_name,
+                    familyName: u.family_name,
+                    email: u.email,
+                    emailVerified: u.email_verified,
+                };
+            },
         }),
     ],
     callbacks: {
