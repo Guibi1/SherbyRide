@@ -1,4 +1,3 @@
-
 package sherby.ride.db;
 
 import jakarta.persistence.Cacheable;
