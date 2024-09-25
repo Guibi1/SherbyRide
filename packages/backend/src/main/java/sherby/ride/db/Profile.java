@@ -1,13 +1,10 @@
 package sherby.ride.db;
 
+import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-
-import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 
 @Entity
 @Cacheable
@@ -26,8 +23,10 @@ public class Profile extends PanacheEntityBase {
     public String faculty;
 
     // Méthode pour mettre à jour un profil
-    public void updateProfile(String phone) {
+    public void updateProfile(String email, String phone,  String faculty) {
+        this.email = email;
         this.phone = phone;
+        this.faculty = faculty;
         persist();
     }
 

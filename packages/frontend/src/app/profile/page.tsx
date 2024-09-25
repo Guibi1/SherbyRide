@@ -1,15 +1,16 @@
-import { auth } from "@/lib/auth";
+import { getProfile } from "@/lib/api";
 import Form from "./form";
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 
 export default async function ProfilePage() {
-    const session = await auth();
-
-    if (!session?.user) notFound();
+    const profile = await getProfile();
+    if (!profile) redirect("/");
 
     return (
-        <>
-            <Form user={session?.user} />
-        </>
+        <main className="container my-8">
+            <h1 className="scroll-m-20 mb-8 text-3xl font-semibold tracking-tight first:mt-0">Mon profil</h1>
+
+            <Form profile={profile} />
+        </main>
     );
 }

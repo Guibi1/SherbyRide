@@ -8,7 +8,14 @@ import io.quarkus.oidc.UserInfo;
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import sherby.ride.db.Profile;
@@ -46,15 +53,15 @@ public class ProfileResource {
     }
 
     @PUT
-    @Path("/{cip}")
-    public Uni<Response> updateProfile(@PathParam("cip") String cip, Profile profile) {
+    public Uni<Response> updateProfile(Profile profile) {
         if (profile == null || profile.phone == null) {
             throw new WebApplicationException("Profile phone was not set on request.", 422);
         }
 
         return Panache
-                .withTransaction(() -> Profile.<Profile>findById(cip)
-                        .onItem().ifNotNull().invoke(entity -> entity.updateProfile(profile.phone))
+                .withTransaction(() -> Profile.<Profile>findById(userInfo.getPreferredUserName())
+                        .onItem().ifNotNull()
+                        .invoke(entity -> entity.updateProfile(profile.email, profile.phone, profile.faculty))
                         .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
                         .onItem().ifNull().continueWith(Response.ok().status(NOT_FOUND)::build));
     }

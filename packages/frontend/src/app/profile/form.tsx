@@ -1,63 +1,148 @@
 "use client";
-
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { User } from "next-auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { type Profile, faculties } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { toast } from "sonner";
 
-export default function Form({ user }: { user: User }) {
-    const [phone, setPhone] = useState("");
+const formSchema = z.object({
+    email: z.string().email(),
+    phone: z.string().regex(/^(\+1\s?)?(\(?\d{3}\)?)[-\s.]?\d{3}[-\s.]?\d{4}$/, "Numéro invalide"),
+    faculty: z.enum(faculties),
+});
 
-    const handleSave = async () => {
+export default function ProfileCreationForm({ profile }: { profile: Profile }) {
+    const router = useRouter();
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: profile,
+    });
+
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         const session = await getSession();
         const res = await fetch("http://localhost:8080/profile", {
             method: "PUT",
-            headers: { Authorization: `Bearer ${session?.accessToken}` },
-            body: JSON.stringify({ cip: session?.user.cip, nom: user.name, email: user.email, phone }),
+            headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+                cip: profile.cip,
+                name: profile.name,
+                email: values.email,
+                phone: values.phone,
+                faculty: values.faculty,
+            }),
         });
 
-        console.log("Profile saved:", { user: user.name, email: user.email, phone });
-    };
+        if (res.ok) {
+            toast("Votre profil a été sauvegardé avec succès !");
+            router.refresh();
+        }
+    }
 
     return (
-        <Card className="w-full max-w-md mx-auto">
-            <CardHeader>
-                <CardTitle className="text-2xl font-bold text-center">Profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8 container">
                 <div className="flex justify-center">
                     <Avatar className="w-24 h-24">
-                        <AvatarImage src={user.image!} alt={user.name!} />
+                        {/* <AvatarImage src={user.image!} alt={user.name!} /> */}
                         <AvatarFallback>
-                            {user
-                                .name!.split(" ")
+                            {profile.name
+                                .split(" ")
                                 .map((n) => n[0])
                                 .join("") || "?"}
                         </AvatarFallback>
                     </Avatar>
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="name">Nom</Label>
-                    <Input id="name" value={user.name!} disabled />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="email">Courriel</Label>
-                    <Input id="email" value={user.email!} disabled />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="phone">Numéro de téléphone</Label>
-                    <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                </div>
-            </CardContent>
-            <CardFooter>
-                <Button className="w-full" onClick={handleSave}>
-                    Sauvegarder les changements
-                </Button>
-            </CardFooter>
-        </Card>
+
+                <FormItem>
+                    <FormLabel>Cip</FormLabel>
+                    <FormControl>
+                        <Input value={profile.cip} disabled />
+                    </FormControl>
+                </FormItem>
+
+                <FormItem>
+                    <FormLabel>Nom</FormLabel>
+                    <FormControl>
+                        <Input value={profile.name} disabled />
+                    </FormControl>
+                </FormItem>
+
+                <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Courriel</FormLabel>
+                            <FormControl>
+                                <Input {...field} type="email" />
+                            </FormControl>
+                            <FormDescription>
+                                Vous n'êtes pas obligé de mettre votre courriel universitaire
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Numéro de téléphone</FormLabel>
+                            <FormControl>
+                                <Input {...field} type="tel" />
+                            </FormControl>
+                            <FormDescription>
+                                Afin de permettre aux autres utilisateurs de vous contacter
+                            </FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <FormField
+                    control={form.control}
+                    name="faculty"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Faculté</FormLabel>
+                            <FormControl>
+                                <Select
+                                    name={field.name}
+                                    value={field.value}
+                                    disabled={field.disabled}
+                                    onValueChange={field.onChange}
+                                    onOpenChange={field.onBlur}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+
+                                    <SelectContent>
+                                        {faculties.map((f) => (
+                                            <SelectItem value={f} key={f}>
+                                                {f}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </FormControl>
+                            <FormDescription>Dans quelle faculté étudiez-vous?</FormDescription>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <Button type="submit">Sauvegarder</Button>
+            </form>
+        </Form>
     );
 }
