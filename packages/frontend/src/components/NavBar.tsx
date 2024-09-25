@@ -27,7 +27,7 @@ export default async function NavBar() {
                     Trouve un déplacement
                 </Link>
 
-                <Link href="" className="text-sm font-medium hover:underline underline-offset-4">
+                <Link href="/offers" className="text-sm font-medium hover:underline underline-offset-4">
                     Offre un déplacement
                 </Link>
 
