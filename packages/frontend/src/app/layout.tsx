@@ -1,5 +1,6 @@
 import Footer from "@/components/Footer";
 import NavBar from "@/components/NavBar";
+import QueryProvider from "@/components/QueryProvider";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
@@ -16,13 +17,15 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
     return (
         <html lang="en">
-            <body className={`${inter.className} antialiased flex flex-col min-h-screen`}>
-                <NavBar />
+            <QueryProvider>
+                <body className={`${inter.className} antialiased flex flex-col min-h-screen`}>
+                    <NavBar />
 
-                <main className="flex-1">{children}</main>
+                    <main className="flex-1">{children}</main>
 
-                <Footer />
-            </body>
+                    <Footer />
+                </body>
+            </QueryProvider>
         </html>
     );
 }
