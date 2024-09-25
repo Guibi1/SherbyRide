@@ -1,4 +1,4 @@
-package sherb.ride;
+package sherby.ride;
 
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;

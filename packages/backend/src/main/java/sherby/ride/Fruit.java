@@ -1,4 +1,4 @@
-package sherb.ride;
+package sherby.ride;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;

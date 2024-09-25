@@ -1,4 +1,4 @@
-package sherb.ride;
+package sherby.ride;
 
 import io.quarkus.oidc.UserInfo;
 import io.quarkus.security.Authenticated;
