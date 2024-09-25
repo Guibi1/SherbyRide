@@ -1,28 +1,28 @@
 package sherby.ride;
 
-import io.quarkus.test.junit.QuarkusTest;
-import sherby.ride.db.Profile;
-import sherby.ride.db.Profile.Faculty;
-//import io.quarkus.panache.mock.PanacheMock;
-
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
-/*import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.is;*/
+import io.quarkus.panache.mock.PanacheMock;
+import io.quarkus.test.junit.QuarkusTest;
+import io.smallrye.mutiny.Uni;
+import sherby.ride.db.Profile;
 
 @QuarkusTest
 class GreetingResourceTest {
     @Test
     public void testProfil() {
-        // PanacheMock.mock(Profile.class);
+        PanacheMock.mock(Profile.class);
 
         Profile p = new Profile();
-        p.cip = "labb1405";
-        // p.dateDeNaissance = LocalDate.of(2004, 05, 07);
+        p.cip = "test1234";
         p.phone = "438-504-3225";
-        p.departement = Faculty.Informatique;
+        p.faculty = "École de gestion";
 
-        p.findById(p.cip);
+        Mockito.when(Profile.findById(p.cip)).thenReturn(Uni.createFrom().item(p));
+        Assertions.assertSame(Uni.createFrom().item(p), Profile.findById(p.cip));
+        Assertions.assertNull(Profile.findById("nono1212"));
     }
 
 }
