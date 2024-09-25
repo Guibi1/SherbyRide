@@ -12,6 +12,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                 familyName: u.family_name,
                 email: u.email,
                 emailVerified: u.email_verified,
+                image: u.image,
             }),
         }),
     ],
@@ -46,4 +47,5 @@ export type User = {
     familyName: string;
     email: string;
     emailVerified: boolean;
+    image?: string;
 };
