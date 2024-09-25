@@ -12,41 +12,41 @@ export default async function OffersPage() {
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
         <CardTitle className="text-3xl font-bold tracking-tight text-center">
-        Hi <span className="italic">{session?.user?.name}</span>. Want to offer a Ride?
+        Hi <span className="italic">{session?.user?.name}</span>. Vous désirex publié une offre de déplacement?
           </CardTitle>
           <CardDescription className="text-center">
-            Fill in the details below to offer a ride to others.
+          Remplissez les informations ci-dessous pour offrir un déplacement.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-medium" htmlFor="departure">
-                Departure
+                Départ
               </label>
-              <Input id="departure" placeholder="Enter departure location" />
+              <Input id="departure" placeholder="Veuillez entrer une location de départ" />
             </div>
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-medium" htmlFor="destination">
                 Destination
               </label>
-              <Input id="destination" placeholder="Enter destination location" />
+              <Input id="destination" placeholder="Veuillez entrer une location d'arrivée" />
             </div>
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-medium" htmlFor="date">
-                Date of departure
+                Date du départ
               </label>
               <Input id="date" type="date" />
             </div>
             <div className="flex flex-col space-y-1.5">
               <label className="text-sm font-medium" htmlFor="time">
-                Time of departure
+                Heure du départ
               </label>
               <Input id="time" type="time" />
             </div>
             <div className="flex flex-col space-y-1.5 sm:col-span-2">
               <label className="text-sm font-medium" htmlFor="passengers">
-                How many passengers can you lift?
+                Combien de passagers?
               </label>
               <Select>
                 <SelectTrigger id="passengers">
@@ -63,7 +63,7 @@ export default async function OffersPage() {
           </form>
         </CardContent>
         <CardFooter>
-          <Button className="w-full">Submit Offer</Button>
+          <Button className="w-full">Publier l'offre</Button>
         </CardFooter>
       </Card>
     </div>
