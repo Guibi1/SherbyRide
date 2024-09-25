@@ -12,7 +12,7 @@ export default async function OffersPage() {
       <Card className="w-full max-w-2xl mx-auto">
         <CardHeader>
         <CardTitle className="text-3xl font-bold tracking-tight text-center">
-        Hi <span className="italic">{session?.user?.name}</span>. Vous désirex publié une offre de déplacement?
+        Bonjour <span className="italic">{session?.user?.name}</span>. Vous désirez publier une offre de déplacement?
           </CardTitle>
           <CardDescription className="text-center">
           Remplissez les informations ci-dessous pour offrir un déplacement.
@@ -50,7 +50,7 @@ export default async function OffersPage() {
               </label>
               <Select>
                 <SelectTrigger id="passengers">
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Selectionnez" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1">1</SelectItem>
