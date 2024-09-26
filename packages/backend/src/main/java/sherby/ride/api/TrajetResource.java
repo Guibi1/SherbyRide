@@ -2,6 +2,7 @@ package sherby.ride.api;
 
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 
+import java.util.Date;
 import java.util.List;
 
 import io.quarkus.panache.common.Sort;
@@ -39,17 +40,17 @@ public class TrajetResource {
     @Transactional
     public Uni<Response> create(Trajet trajet) {
 
-        if (trajet.getDepartureLoc() == null || trajet.getDepartureLoc().isEmpty()) {
+        if (trajet.departureLoc == null || trajet.departureLoc.isEmpty()) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
                     .entity("You must enter a departure location").build());
         }
 
-        if (trajet.getArrivalLoc() == null || trajet.getArrivalLoc().isEmpty()) {
+        if (trajet.arrivalLoc == null || trajet.arrivalLoc.isEmpty()) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
                     .entity("You must enter a arrival location").build());
         }
 
-        if (trajet.getDepartureTime() == null) {
+        if (trajet.departureTime == null || trajet.departureTime.before(new Date())) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
                     .entity("You must enter a arrival location").build());
         }
