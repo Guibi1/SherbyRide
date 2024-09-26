@@ -38,7 +38,6 @@ public class TrajetResource {
     }
 
     @POST
-    @Transactional
     public Uni<Response> create(Trajet trajet) {
 
         if (trajet.departureLoc == null || trajet.departureLoc.isEmpty()) {
