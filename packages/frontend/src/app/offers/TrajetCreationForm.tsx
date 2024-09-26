@@ -1,15 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { User } from "@/lib/auth";
-import { type Faculty, faculties } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getSession } from "next-auth/react";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { parse, parseISO } from "date-fns";
 import { z } from "zod";
 
 const formSchema = z.object({
@@ -89,7 +87,12 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                         <FormItem>
                             <FormLabel>Date de départ</FormLabel>
                             <FormControl>
-                                <Input {...field} type="datetime-local" />
+                                <Input
+                                    {...field}
+                                    type="datetime-local"
+                                    min={new Date().toISOString().slice(0, 16)}
+                                    step="300"
+                                />
                             </FormControl>
                             <FormMessage />
                         </FormItem>

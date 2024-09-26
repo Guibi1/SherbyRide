@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { CalendarIcon, CarIcon, ClockIcon, DollarSignIcon, FilterIcon, UserIcon } from "lucide-react";
@@ -44,7 +45,7 @@ export default function RidesPage() {
                                 </Select>
                             </div>
                             <div>
-                                <label className="text-sm font-medium">Price Range</label>
+                                <Label className="text-sm font-medium">Price Range</Label>
                                 <Slider defaultValue={[0, 100]} max={100} step={1} />
                             </div>
                             <Button className="w-full">
