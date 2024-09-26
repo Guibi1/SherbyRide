@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { type Profile, faculties } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -26,25 +27,30 @@ export default function ProfileCreationForm({ profile }: { profile: Profile }) {
         defaultValues: profile,
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        const session = await getSession();
-        const res = await fetch("http://localhost:8080/profile", {
-            method: "PUT",
-            headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                cip: profile.cip,
-                name: profile.name,
-                email: values.email,
-                phone: values.phone,
-                faculty: values.faculty,
-            }),
-        });
-
-        if (res.ok) {
-            toast("Votre profil a été sauvegardé avec succès !");
+    const { mutate, isPending } = useMutation({
+        async mutationFn(values: z.infer<typeof formSchema>) {
+            const session = await getSession();
+            const res = await fetch("http://localhost:8080/profile", {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    cip: profile.cip,
+                    name: profile.name,
+                    email: values.email,
+                    phone: values.phone,
+                    faculty: values.faculty,
+                }),
+            });
+            if (!res.ok) throw `${res.status}: ${res.statusText}`;
+        },
+        onSuccess() {
+            toast.success("Votre profil a été sauvegardé avec succès");
             router.refresh();
-        }
-    }
+        },
+        onError(error) {
+            toast.error("Une erreur est survenue", { description: error.message });
+        },
+    });
 
     return (
         <div className="flex gap-4 md:gap-8 lg:gap-16">
@@ -68,7 +74,7 @@ export default function ProfileCreationForm({ profile }: { profile: Profile }) {
             </Card>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 flex flex-col gap-8">
+                <form onSubmit={form.handleSubmit((v) => mutate(v))} className="flex-1 flex flex-col gap-8">
                     <FormField
                         control={form.control}
                         name="email"
@@ -136,7 +142,9 @@ export default function ProfileCreationForm({ profile }: { profile: Profile }) {
                         )}
                     />
 
-                    <Button type="submit">Sauvegarder</Button>
+                    <Button type="submit" disabled={isPending}>
+                        Sauvegarder
+                    </Button>
                 </form>
             </Form>
         </div>

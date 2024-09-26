@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { User } from "@/lib/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
 const formSchema = z.object({
@@ -29,28 +31,34 @@ export default function TrajetCreationForm({ user }: { user: User }) {
         },
     });
 
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        const session = await getSession();
-        const res = await fetch("http://localhost:8080/trajet", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
-                driver: user.cip,
-                departureLoc: values.depart,
-                arrivalLoc: values.arrive,
-                departureTime: values.date,
-                maxPassagers: values.passagers,
-            }),
-        });
-
-        if (res.ok) {
+    const { mutate, isPending } = useMutation({
+        async mutationFn(values: z.infer<typeof formSchema>) {
+            const session = await getSession();
+            const res = await fetch("http://localhost:8080/trajet", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    driver: user.cip,
+                    departureLoc: values.depart,
+                    arrivalLoc: values.arrive,
+                    departureTime: values.date,
+                    maxPassagers: values.passagers,
+                }),
+            });
+            if (!res.ok) throw `${res.status}: ${res.statusText}`;
+        },
+        onSuccess() {
+            toast.success("Votre offre de trajet à été sauvegardé avec succès");
             router.refresh();
-        }
-    }
+        },
+        onError(error) {
+            toast.error("Une erreur est survenue", { description: error.message });
+        },
+    });
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-8 container">
+            <form onSubmit={form.handleSubmit((v) => mutate(v))} className="flex flex-col gap-8 container">
                 <FormField
                     control={form.control}
                     name="depart"
@@ -132,7 +140,9 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                     )}
                 />
 
-                <Button type="submit">Publier l'offre</Button>
+                <Button type="submit" disabled={isPending}>
+                    Publier l'offre
+                </Button>
             </form>
         </Form>
     );

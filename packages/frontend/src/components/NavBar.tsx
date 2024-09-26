@@ -2,7 +2,6 @@ import { getProfile } from "@/lib/api";
 import { auth, signIn, signOut } from "@/lib/auth";
 import { CarIcon } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -19,7 +18,7 @@ export default async function NavBar() {
     const profile = await getProfile();
 
     return (
-        <header className="px-4 lg:px-6 h-14 flex items-center border-b gap-8">
+        <header className="px-4 lg:px-6 h-14 flex items-center border-b gap-8 border-primary sticky bg-background top-0 z-50">
             <Link className="flex items-center justify-center" href="/">
                 <CarIcon className="h-6 w-6" />
                 <span className="ml-2 text-lg font-semibold">SherbyRide</span>
@@ -32,10 +31,6 @@ export default async function NavBar() {
 
                 <Link href="/offers" className="text-sm font-medium hover:underline underline-offset-4">
                     Offre un déplacement
-                </Link>
-
-                <Link href="" className="text-sm font-medium hover:underline underline-offset-4">
-                    Comment sa marche
                 </Link>
             </nav>
 

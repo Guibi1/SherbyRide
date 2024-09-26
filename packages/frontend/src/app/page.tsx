@@ -32,12 +32,12 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            <section className="py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
+            <section className="py-12 md:py-24 lg:py-32 bg-primary/10 dark:bg-card">
                 <div className="container px-4 md:px-6">
                     <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Trajets disponibles</h2>
                     <div className="grid gap-6 mt-8 sm:grid-cols-2 lg:grid-cols-3">
                         {[1, 2, 3, 4, 5, 6].map((ride) => (
-                            <Card key={ride}>
+                            <Card key={ride} className="bg-background">
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         Sherbrooke <CarIcon size="1em" /> Montréal
