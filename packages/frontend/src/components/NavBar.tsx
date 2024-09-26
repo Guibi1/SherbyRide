@@ -1,6 +1,8 @@
+import { getProfile } from "@/lib/api";
 import { auth, signIn, signOut } from "@/lib/auth";
 import { CarIcon } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -14,6 +16,7 @@ import {
 
 export default async function NavBar() {
     const user = (await auth())?.user;
+    const profile = await getProfile();
 
     return (
         <header className="px-4 lg:px-6 h-14 flex items-center border-b gap-8">
@@ -36,19 +39,19 @@ export default async function NavBar() {
                 </Link>
             </nav>
 
-            {user ? (
+            {user && profile ? (
                 <DropdownMenu>
                     <DropdownMenuTrigger>
                         <Avatar className="border">
-                            <AvatarImage src={user?.image || undefined} />
-                            <AvatarFallback>{user?.name?.at(0)}</AvatarFallback>
+                            <AvatarImage src={user.image || undefined} />
+                            <AvatarFallback>{user.name.at(0)}</AvatarFallback>
                         </Avatar>
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent>
                         <DropdownMenuLabel>
-                            {user?.name}
-                            <div className="text-muted-foreground font-light text-sm">{user?.email}</div>
+                            {user.name}
+                            <div className="text-muted-foreground font-light text-sm">{profile.email}</div>
                         </DropdownMenuLabel>
 
                         <DropdownMenuSeparator />

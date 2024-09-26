@@ -1,6 +1,6 @@
 import { getProfile } from "@/lib/api";
-import Form from "./form";
 import { redirect } from "next/navigation";
+import ProfileCreationForm from "./ProfileCreationForm";
 
 export default async function ProfilePage() {
     const profile = await getProfile();
@@ -10,7 +10,7 @@ export default async function ProfilePage() {
         <main className="container my-8">
             <h1 className="scroll-m-20 mb-8 text-3xl font-semibold tracking-tight first:mt-0">Mon profil</h1>
 
-            <Form profile={profile} />
+            <ProfileCreationForm profile={profile} />
         </main>
     );
 }

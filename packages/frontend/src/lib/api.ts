@@ -1,6 +1,6 @@
 import { isServer } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
-import { auth } from "./auth";
+import { auth, signOut } from "./auth";
 import type { Profile } from "./types";
 
 export async function getProfile() {
@@ -13,7 +13,8 @@ export async function getProfile() {
     });
 
     if (!res.ok) {
-        console.log("FETCH NOT OK", res.status);
+        if (isServer && res.status === 404) await signOut();
+        console.error("Couldn't get profile", res.status);
         return null;
     }
 
