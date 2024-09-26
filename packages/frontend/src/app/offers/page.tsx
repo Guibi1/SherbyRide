@@ -13,6 +13,7 @@ export default async function OffersPage() {
         const res = await fetch("http://localhost:8080/trajet", {
             method: "POST",
             headers: { Authorization: `Bearer ${session?.accessToken}` },
+            body: JSON.stringify({}),
         });
     };
 
