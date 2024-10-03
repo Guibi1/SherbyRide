@@ -137,6 +137,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                                                     date.setHours(hours);
                                                     field.onChange(date);
                                                 }}
+                                                disabled={!field.value}
                                                 className="w-14 text-center"
                                             />
                                             :
@@ -151,6 +152,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                                                     date.setMinutes(minutes);
                                                     field.onChange(date);
                                                 }}
+                                                disabled={!field.value}
                                                 className="w-14 text-center"
                                             />
                                         </div>
