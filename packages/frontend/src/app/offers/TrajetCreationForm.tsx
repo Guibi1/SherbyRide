@@ -5,10 +5,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import type { User } from "@/lib/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, ClockIcon } from "lucide-react";
 import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -100,20 +101,60 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                                 <PopoverTrigger asChild>
                                     <FormControl>
                                         <Button variant="outline" className="pl-3 text-left font-normal">
-                                            {field.value?.toLocaleDateString(undefined, { dateStyle: "long" })}
+                                            {field.value?.toLocaleString(undefined, {
+                                                dateStyle: "long",
+                                                timeStyle: "short",
+                                            })}
 
                                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50 text-muted-foreground" />
                                         </Button>
                                     </FormControl>
                                 </PopoverTrigger>
 
-                                <PopoverContent className="w-auto p-0" align="start">
+                                <PopoverContent className="w-auto h-min p-0 flex flex-col" align="start">
                                     <Calendar
                                         mode="single"
                                         selected={field.value}
                                         onSelect={field.onChange}
                                         disabled={(date) => date <= new Date()}
                                     />
+
+                                    <div className="px-6 py-2">
+                                        <Separator orientation="horizontal" />
+                                    </div>
+
+                                    <div className="p-4 overflow-hidden">
+                                        <div className="flex items-center justify-center gap-2 text-lg">
+                                            <ClockIcon className="h-6 w-6 mr-2" />
+                                            <Input
+                                                {...field}
+                                                value={(field.value?.getHours() ?? 0).toString()}
+                                                onChange={(e) => {
+                                                    if (e.target.value === "") e.target.value = "0";
+                                                    const hours = +e.target.value;
+                                                    if (hours < 0 || hours > 23) return;
+                                                    const date = new Date(field.value);
+                                                    date.setHours(hours);
+                                                    field.onChange(date);
+                                                }}
+                                                className="w-14 text-center"
+                                            />
+                                            :
+                                            <Input
+                                                {...field}
+                                                value={(field.value?.getMinutes() ?? 0).toString()}
+                                                onChange={(e) => {
+                                                    if (e.target.value === "") e.target.value = "0";
+                                                    const minutes = +e.target.value;
+                                                    if (minutes < 0 || minutes > 59) return;
+                                                    const date = new Date(field.value);
+                                                    date.setMinutes(minutes);
+                                                    field.onChange(date);
+                                                }}
+                                                className="w-14 text-center"
+                                            />
+                                        </div>
+                                    </div>
                                 </PopoverContent>
                             </Popover>
                             <FormMessage />
