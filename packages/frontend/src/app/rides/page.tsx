@@ -1,98 +1,72 @@
-"use client";
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { CalendarIcon, CarIcon, ClockIcon, DollarSignIcon, FilterIcon, UserIcon } from "lucide-react";
+import { type GetRidesOptions, getRides } from "@/lib/api";
+import { CarFrontIcon, CarIcon, UserIcon } from "lucide-react";
+import Link from "next/link";
+import RideFilter from "./RideFilter";
 
-export default function RidesPage() {
+type PageProps = { searchParams: GetRidesOptions };
+
+export default async function RidesPage({ searchParams }: PageProps) {
+    const rides = await getRides(searchParams);
+
     return (
-        <main className="flex-1">
-            <section className="w-full py-6 md:py-12 lg:py-16 xl:py-24 bg-gray-100 dark:bg-gray-800">
-                <div className="container px-4 md:px-6">
-                    <h1 className="text-3xl font-bold tracking-tighter mb-4">Find a Ride to San Francisco</h1>
-                    <div className="grid gap-6 md:grid-cols-4">
-                        <div className="space-y-4 md:col-span-1">
-                            <div>
-                                <label className="text-sm font-medium" htmlFor="departure">
-                                    Departure
-                                </label>
-                                <Input id="departure" placeholder="Enter departure location" />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium" htmlFor="date">
-                                    Date
-                                </label>
-                                <Input id="date" type="date" />
-                            </div>
-                            <div>
-                                <label className="text-sm font-medium" htmlFor="passengers">
-                                    Passengers
-                                </label>
-                                <Select>
-                                    <SelectTrigger id="passengers">
-                                        <SelectValue placeholder="Select" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="1">1</SelectItem>
-                                        <SelectItem value="2">2</SelectItem>
-                                        <SelectItem value="3">3</SelectItem>
-                                        <SelectItem value="4">4</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div>
-                                <Label className="text-sm font-medium">Price Range</Label>
-                                <Slider defaultValue={[0, 100]} max={100} step={1} />
-                            </div>
-                            <Button className="w-full">
-                                <FilterIcon className="w-4 h-4 mr-2" />
-                                Apply Filters
-                            </Button>
-                        </div>
+        <main className="py-6 md:py-12 lg:py-16 xl:py-24 bg-gray-100 dark:bg-gray-800">
+            <div className="container">
+                <h1 className="text-3xl font-bold tracking-tighter mb-4">Trouver un covoiturage</h1>
 
-                        <div className="md:col-span-3">
-                            <div className="grid gap-6">
-                                {[1, 2, 3, 4, 5].map((ride) => (
-                                    <Card key={ride}>
-                                        <CardHeader>
-                                            <CardTitle>Ride to San Francisco</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <div className="grid gap-2">
-                                                <div className="flex items-center">
-                                                    <CarIcon className="w-4 h-4 mr-2" />
-                                                    <span className="text-sm">From: Los Angeles</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <CalendarIcon className="w-4 h-4 mr-2" />
-                                                    <span className="text-sm">Date: June 15, 2023</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <ClockIcon className="w-4 h-4 mr-2" />
-                                                    <span className="text-sm">Departure Time: 9:00 AM</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <UserIcon className="w-4 h-4 mr-2" />
-                                                    <span className="text-sm">3 seats available</span>
-                                                </div>
-                                                <div className="flex items-center">
-                                                    <DollarSignIcon className="w-4 h-4 mr-2" />
-                                                    <span className="text-sm">Price: $25 per seat</span>
-                                                </div>
-                                            </div>
-                                            <Button className="w-full mt-4">Book Now</Button>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
+                <div className="grid gap-6 md:grid-cols-4">
+                    <RideFilter initial={searchParams} />
+
+                    <section className="md:col-span-3">
+                        <div className="grid gap-6">
+                            {rides.map((ride) => (
+                                <Card key={ride.id} className="bg-background">
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            {ride.departureLoc} <CarIcon size="1em" /> {ride.arrivalLoc}
+                                        </CardTitle>
+                                    </CardHeader>
+
+                                    <CardContent>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            Date:{" "}
+                                            {ride.departureTime.toLocaleDateString("fr-CA", {
+                                                month: "long",
+                                                day: "numeric",
+                                            })}{" "}
+                                            à{" "}
+                                            {ride.departureTime.toLocaleTimeString("fr-CA", {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                            })}
+                                        </p>
+
+                                        <div className="flex items-center mt-4">
+                                            <UserIcon className="h-4 w-4 mr-2" />
+                                            <span className="text-sm font-medium">
+                                                {ride.maxPassengers} places disponibles
+                                            </span>
+                                        </div>
+
+                                        <Button className="w-full mt-4" asChild>
+                                            <Link href={`/rides/${ride.id}`}>Réserver maintenant</Link>
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            ))}
+
+                            {rides.length === 0 && (
+                                <div className="flex flex-col items-center justify-center gap-2">
+                                    <CarFrontIcon className="h-32 w-32 text-muted-foreground" />
+                                    <p className="text-xl font-semibold">Oh oh.</p>
+                                    <p>Aucune offre de covoiturage avec vos critères n'a été trouvée</p>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    </section>
                 </div>
-            </section>
+            </div>
         </main>
     );
 }

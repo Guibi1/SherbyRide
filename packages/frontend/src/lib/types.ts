@@ -6,6 +6,15 @@ export type Profile = {
     faculty: Faculty;
 };
 
+export type Trajet = {
+    id: number;
+    departureLoc: string;
+    arrivalLoc: string;
+    departureTime: Date;
+    maxPassengers: number;
+    driver: Profile;
+};
+
 export const faculties = [
     "Génie",
     "Droit",

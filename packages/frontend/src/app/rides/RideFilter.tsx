@@ -5,62 +5,59 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { User } from "@/lib/auth";
+import type { GetRidesOptions } from "@/lib/api";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
 import { CalendarIcon } from "lucide-react";
-import { getSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { z } from "zod";
 
 const formSchema = z.object({
-    from: z.string().max(50),
-    to: z.string().max(50),
-    date: z.date(),
-    passengers: z.number().min(1),
+    from: z.string().max(50).optional(),
+    to: z.string().max(50).optional(),
+    date: z.date().optional(),
+    passengers: z.number().optional(),
 });
 
-export default function TrajetCreationForm({ user }: { user: User }) {
+export default function RideFilter({ initial }: { initial: GetRidesOptions }) {
     const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
+        mode: "onBlur",
         defaultValues: {
-            from: "",
-            to: "",
-            passengers: 0,
+            from: initial.from ?? "",
+            to: initial.to ?? "",
+            passengers: +(initial.passengers ?? 0),
         },
     });
 
-    const { mutate, isPending } = useMutation({
-        async mutationFn(values: z.infer<typeof formSchema>) {
-            const session = await getSession();
-            const res = await fetch("http://localhost:8080/trajet", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    driver: user.cip,
-                    departureLoc: values.from,
-                    arrivalLoc: values.to,
-                    departureTime: values.date,
-                    maxPassengers: values.passengers,
-                }),
-            });
-            if (!res.ok) throw `${res.status}: ${res.statusText}`;
-        },
-        onSuccess() {
-            toast.success("Votre offre de trajet à été sauvegardé avec succès");
-            router.push("/");
-        },
-        onError(error) {
-            toast.error("Une erreur est survenue", { description: error.message });
-        },
-    });
+    useEffect(() => {
+        if (initial.date) form.setValue("date", new Date(initial.date));
+    }, [initial.date, form.setValue]);
+
+    const submit = (values: z.infer<typeof formSchema>) => {
+        const a = new URLSearchParams();
+
+        if (values.from) {
+            a.append("from", values.from);
+        }
+        if (values.to) {
+            a.append("to", values.to);
+        }
+        if (values.date) {
+            a.append("date", values.date.toISOString());
+        }
+        if (values.passengers) {
+            a.append("passengers", values.passengers.toString());
+        }
+
+        router.push(`/rides?${a.toString()}`);
+    };
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit((v) => mutate(v))} className="flex flex-col gap-8 container">
+            <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-4">
                 <FormField
                     control={form.control}
                     name="from"
@@ -68,9 +65,8 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                         <FormItem>
                             <FormLabel>Lieu de départ</FormLabel>
                             <FormControl>
-                                <Input {...field} />
+                                <Input {...field} className="bg-background" />
                             </FormControl>
-
                             <FormMessage />
                         </FormItem>
                     )}
@@ -83,7 +79,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                         <FormItem>
                             <FormLabel>Destination</FormLabel>
                             <FormControl>
-                                <Input {...field} />
+                                <Input {...field} className="bg-background" />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
@@ -100,7 +96,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                                 <PopoverTrigger asChild>
                                     <FormControl>
                                         <Button variant="outline" className="pl-3 text-left font-normal">
-                                            {field.value?.toLocaleDateString(undefined, { dateStyle: "long" })}
+                                            {field.value?.toLocaleDateString("fr-CA", { dateStyle: "long" })}
 
                                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50 text-muted-foreground" />
                                         </Button>
@@ -111,7 +107,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                                     <Calendar
                                         mode="single"
                                         selected={field.value}
-                                        onSelect={field.onChange}
+                                        onSelect={(e) => field.onChange(e)}
                                         disabled={(date) => date <= new Date()}
                                     />
                                 </PopoverContent>
@@ -126,20 +122,22 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                     name="passengers"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Combien de passagers pouvez-vous apporter?</FormLabel>
+                            <FormLabel>Nombre de passagers</FormLabel>
                             <FormControl>
                                 <Select
                                     name={field.name}
-                                    value={field.value.toString()}
+                                    value={field.value?.toString()}
                                     disabled={field.disabled}
-                                    onValueChange={(v) => field.onChange(+v)}
+                                    onValueChange={(v) => field.onChange(v === "reset" ? 0 : +v)}
                                     onOpenChange={field.onBlur}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-background">
                                         <SelectValue />
                                     </SelectTrigger>
-
                                     <SelectContent>
+                                        <SelectItem value="reset" className="text-muted-foreground">
+                                            Réinitialiser
+                                        </SelectItem>
                                         <SelectItem value="1">1</SelectItem>
                                         <SelectItem value="2">2</SelectItem>
                                         <SelectItem value="3">3</SelectItem>
@@ -154,9 +152,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                     )}
                 />
 
-                <Button type="submit" disabled={isPending}>
-                    Publier l'offre
-                </Button>
+                <Button type="submit">Chercher</Button>
             </form>
         </Form>
     );
