@@ -98,7 +98,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                                 <Input
                                     {...field}
                                     type="datetime-local"
-                                    min={new Date().toISOString().slice(0, 16)}
+                                    min={`${new Date().toISOString().slice(0, 15)}5`}
                                     step="300"
                                 />
                             </FormControl>

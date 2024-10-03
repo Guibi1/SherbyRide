@@ -27,17 +27,17 @@ public class Trajet extends PanacheEntity {
     public int maxPassagers;
 
     @ManyToOne
-    public Profile profile;
+    public Profile driver;
 
     public Trajet() {
     }
 
-    public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassagers, Profile profile) {
+    public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassagers, Profile driver) {
         this.departureLoc = departureLoc;
         this.arrivalLoc = arrivalLoc;
         this.departureTime = departureTime;
         this.maxPassagers = maxPassagers;
-        this.profile = profile;
+        this.driver = driver;
     }
 
     public Uni<List<Trajet>> findBydepartureLoc(String departureLoc) {
