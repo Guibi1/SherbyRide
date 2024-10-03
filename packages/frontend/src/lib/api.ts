@@ -29,20 +29,18 @@ export type GetRidesOptions = {
     passengers?: number;
 };
 
-export async function getRides(options?: GetRidesOptions): Promise<Trajet[]> {
+export async function getRides(options?: GetRidesOptions): Promise<Trajet[] | string> {
     const session = isServer ? await auth() : await getSession();
     const searchParams = Object.entries(options ?? {})
         .map((e) => e.join("="))
         .join("&");
-    console.log("🚀 ~ getRides ~ searchParams:", searchParams);
 
-    const res = await fetch(`http://localhost:8080/trajet?${searchParams}`, {
-        headers: { Authorization: session ? `Bearer ${session.accessToken}` : "", "Content-Type": "application/json" },
-    });
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (session) headers.Authorization = `Bearer ${session.accessToken}`;
+    const res = await fetch(`http://localhost:8080/trajet?${searchParams}`, { headers });
 
     if (!res.ok) {
-        console.error("Couldn't get rides", res.status);
-        return [];
+        return res.statusText;
     }
 
     const json = await res.json();

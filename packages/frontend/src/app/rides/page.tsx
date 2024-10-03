@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type GetRidesOptions, getRides } from "@/lib/api";
-import { CarFrontIcon, CarIcon, UserIcon } from "lucide-react";
+import { CarFrontIcon, CarIcon, CircleOffIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import RideFilter from "./RideFilter";
 
@@ -10,9 +10,21 @@ type PageProps = { searchParams: GetRidesOptions };
 export default async function RidesPage({ searchParams }: PageProps) {
     const rides = await getRides(searchParams);
 
+    if (typeof rides === "string") {
+        return (
+            <main className="py-6 md:py-12 lg:py-16 xl:py-24 bg-gray-100 dark:bg-gray-800">
+                <div className="container flex flex-col items-center justify-center gap-2">
+                    <CircleOffIcon className="h-32 w-32 text-muted-foreground mb-2" />
+                    <p className="text-xl font-semibold">Une erreur s'est produite</p>
+                    <p className="text-muted-foreground">{rides}</p>
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="py-6 md:py-12 lg:py-16 xl:py-24 bg-gray-100 dark:bg-gray-800">
-            <div className="container flex flex-col md:flex-row gap-16 ">
+            <div className="container flex flex-col md:flex-row gap-16">
                 <div className="flex flex-col md:w-80">
                     <h1 className="text-3xl font-bold tracking-tighter mb-4">Trouver un covoiturage</h1>
 
