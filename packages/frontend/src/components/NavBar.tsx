@@ -1,6 +1,6 @@
 import { getProfile } from "@/lib/api";
 import { auth, signIn, signOut } from "@/lib/auth";
-import { CarIcon } from "lucide-react";
+import { CarIcon, LogInIcon } from "lucide-react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -77,7 +77,10 @@ export default async function NavBar() {
                         await signIn("keycloak", { redirectTo: "/create-profile" });
                     }}
                 >
-                    <Button type="submit">Connexion</Button>
+                    <Button type="submit">
+                        Connexion
+                        <LogInIcon className="w-4 h-4 ml-2" />
+                    </Button>
                 </form>
             )}
         </header>

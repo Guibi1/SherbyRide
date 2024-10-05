@@ -46,3 +46,18 @@ export async function getRides(options?: GetRidesOptions): Promise<Ride[] | stri
     const json = await res.json();
     return (json as Ride[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
 }
+
+export async function getRide(id: string): Promise<Trajet | string> {
+    const session = isServer ? await auth() : await getSession();
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (session) headers.Authorization = `Bearer ${session.accessToken}`;
+    const res = await fetch(`http://localhost:8080/trajet/${id}`, { headers });
+
+    if (!res.ok) {
+        return res.statusText;
+    }
+
+    const json = await res.json();
+    return { ...json, departureTime: new Date(json.departureTime) } as Trajet;
+}

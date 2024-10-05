@@ -1,7 +1,8 @@
+import ErrorOccured from "@/components/ErrorOccured";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type GetRidesOptions, getRides } from "@/lib/api";
-import { CarFrontIcon, CarIcon, CircleOffIcon, UserIcon } from "lucide-react";
+import { CalendarClockIcon, CarFrontIcon, CarIcon, CircleOffIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import RideFilter from "./RideFilter";
 
@@ -14,11 +15,7 @@ export default async function RidesPage({ searchParams }: PageProps) {
     if (typeof rides === "string") {
         return (
             <main className="py-6 md:py-12 lg:py-16 xl:py-24 bg-gray-100 dark:bg-gray-800">
-                <div className="container flex flex-col items-center justify-center gap-2">
-                    <CircleOffIcon className="h-32 w-32 text-muted-foreground mb-2" />
-                    <p className="text-xl font-semibold">Une erreur s'est produite</p>
-                    <p className="text-muted-foreground">{rides}</p>
-                </div>
+                <ErrorOccured message={rides} />
             </main>
         );
     }
@@ -36,28 +33,29 @@ export default async function RidesPage({ searchParams }: PageProps) {
                     {rides.map((ride) => (
                         <Card key={ride.id} className="bg-background">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
+                                <CardTitle className="flex items-center gap-2 text-lg">
                                     {ride.departureLoc} <CarIcon size="1em" /> {ride.arrivalLoc}
                                 </CardTitle>
                             </CardHeader>
 
-                            <CardContent>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    Date:{" "}
+                            <CardContent className="flex flex-col gap-2">
+                                <div className="flex items-center gap-2">
+                                    <CalendarClockIcon className="h-4 w-4" strokeWidth={2.3} />
+                                    {"Le "}
                                     {ride.departureTime.toLocaleDateString("fr-CA", {
                                         month: "long",
+                                        weekday: "long",
                                         day: "numeric",
-                                    })}{" "}
-                                    à{" "}
-                                    {ride.departureTime.toLocaleTimeString("fr-CA", {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
                                     })}
-                                </p>
+                                    {" à "}
+                                    {ride.departureTime.toLocaleTimeString("fr-CA", {
+                                        timeStyle: "short",
+                                    })}
+                                </div>
 
-                                <div className="flex items-center mt-4">
-                                    <UserIcon className="h-4 w-4 mr-2" />
-                                    <span className="text-sm font-medium">{ride.maxPassengers} places disponibles</span>
+                                <div className="flex items-center gap-2">
+                                    <UserIcon className="h-4 w-4" strokeWidth={2.3} />
+                                    {ride.maxPassengers} places disponibles
                                 </div>
 
                                 <Button className="w-full mt-4" asChild>
