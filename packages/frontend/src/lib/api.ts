@@ -2,7 +2,7 @@ import { isServer } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import { string } from "zod";
 import { auth } from "./auth";
-import type { Profile, Trajet } from "./types";
+import type { Profile, Ride } from "./types";
 
 export async function getProfile() {
     const session = isServer ? await auth() : await getSession();
@@ -29,7 +29,7 @@ export type GetRidesOptions = {
     passengers?: number;
 };
 
-export async function getRides(options?: GetRidesOptions): Promise<Trajet[] | string> {
+export async function getRides(options?: GetRidesOptions): Promise<Ride[] | string> {
     const session = isServer ? await auth() : await getSession();
     const searchParams = Object.entries(options ?? {})
         .map((e) => e.join("="))
@@ -44,5 +44,5 @@ export async function getRides(options?: GetRidesOptions): Promise<Trajet[] | st
     }
 
     const json = await res.json();
-    return (json as Trajet[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
+    return (json as Ride[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
 }
