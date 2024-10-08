@@ -6,13 +6,18 @@ export type Profile = {
     faculty: Faculty;
 };
 
-export type Trajet = {
+export type ProfileRatings = {
+    average: number;
+    count: number;
+};
+
+export type Ride = {
     id: number;
     departureLoc: string;
     arrivalLoc: string;
     departureTime: Date;
     maxPassengers: number;
-    driver: Profile;
+    ratings: ProfileRatings;
 };
 
 export const faculties = [

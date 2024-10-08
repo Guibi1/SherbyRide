@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import type { User } from "@/lib/auth";
+import type { Ride } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { CalendarIcon, ClockIcon } from "lucide-react";
@@ -49,10 +50,11 @@ export default function TrajetCreationForm({ user }: { user: User }) {
                 }),
             });
             if (!res.ok) throw `${res.status}: ${res.statusText}`;
+            return (await res.json()) as Ride;
         },
-        onSuccess() {
+        onSuccess(ride) {
             toast.success("Votre offre de trajet à été sauvegardé avec succès");
-            router.push("/");
+            router.push(`/rides/${ride.id}`);
         },
         onError(error) {
             toast.error("Une erreur est survenue", { description: error.message });
