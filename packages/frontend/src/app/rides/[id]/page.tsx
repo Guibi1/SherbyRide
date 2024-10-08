@@ -1,7 +1,7 @@
 import ErrorOccured from "@/components/ErrorOccured";
 import { Separator } from "@/components/ui/separator";
 import { getProfile, getRide } from "@/lib/api";
-import { CarFrontIcon, CarIcon, LocateIcon, MapPinIcon, UserIcon } from "lucide-react";
+import { CarFrontIcon, CarIcon, LocateIcon, MapPinIcon, StarIcon, UserIcon } from "lucide-react";
 import BookingCard from "./BookingCard";
 
 type RideDetailsProps = { params: { id: string } };
@@ -69,6 +69,17 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                     <Separator orientation="horizontal" />
 
                     <div className="px-4 flex items-center gap-4">
+                        <UserIcon className="h-7 w-7" />
+
+                        <div>
+                            <p className="text-lg">{ride.maxPassengers} places disponibles</p>
+                            <p className="text-muted-foreground">Sur {ride.maxPassengers} places totales</p>
+                        </div>
+                    </div>
+
+                    <Separator orientation="horizontal" />
+
+                    <div className="px-4 flex items-center gap-4">
                         <CarFrontIcon className="h-7 w-7" />
 
                         <div>
@@ -80,11 +91,11 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                     <Separator orientation="horizontal" />
 
                     <div className="px-4 flex items-center gap-4">
-                        <UserIcon className="h-7 w-7" />
+                        <StarIcon className="h-7 w-7" />
 
                         <div>
-                            <p className="text-lg">{ride.maxPassengers} places disponibles</p>
-                            <p className="text-muted-foreground">Sur {ride.maxPassengers} places totales</p>
+                            <p className="text-lg">Conducteur fiable</p>
+                            <p className="text-muted-foreground">Évaluation moyene de 3.5 par 80 personnes</p>
                         </div>
                     </div>
                 </section>
