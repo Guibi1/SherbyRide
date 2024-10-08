@@ -9,6 +9,7 @@ type PageProps = { searchParams: GetRidesOptions };
 
 export default async function RidesPage({ searchParams }: PageProps) {
     const rides = await getRides(searchParams);
+    console.log("🚀 ~ RidesPage ~ rides:", rides);
 
     if (typeof rides === "string") {
         return (
