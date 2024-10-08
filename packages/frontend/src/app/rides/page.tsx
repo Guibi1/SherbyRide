@@ -29,7 +29,7 @@ export default async function RidesPage({ searchParams }: PageProps) {
                     <RideFilter initial={searchParams} />
                 </div>
 
-                <div className="flex-1 grid gap-6">
+                <div className="flex-1 flex flex-col gap-6">
                     {rides.map((ride) => (
                         <Card key={ride.id} className="bg-background">
                             <CardHeader>
