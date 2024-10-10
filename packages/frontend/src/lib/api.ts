@@ -61,3 +61,14 @@ export async function getRide(id: string): Promise<Ride | string> {
     const json = await res.json();
     return { ...json, departureTime: new Date(json.departureTime) } as Ride;
 }
+
+export async function getRating(profileId: string): Promise<number> {
+    const session = isServer ? await auth() : await getSession();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (session) headers.Authorization = `Bearer ${session.accessToken}`;
+
+    const res = await fetch(`http://localhost:8080/ratings/${profileId}`, { headers });
+
+    const json = await res.json();
+    return json.rating as number; // Suppose que la réponse JSON contient un champ `rating`
+}
