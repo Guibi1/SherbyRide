@@ -54,7 +54,7 @@ export default async function NavBar() {
                             <Link href="/profile">Mon profil</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                            <Link href="/rides">Mes rides</Link>
+                            <Link href="/my-rides">Mes rides</Link>
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />
