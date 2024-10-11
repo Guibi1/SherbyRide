@@ -1,9 +1,0 @@
-{
-  "dependencies": {},
-  "devDependencies": {
-    "@biomejs/biome": "^1.9.2"
-  },
-  "trustedDependencies": [
-    "@biomejs/biome"
-  ]
-}
