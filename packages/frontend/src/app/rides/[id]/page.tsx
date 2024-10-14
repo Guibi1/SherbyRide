@@ -94,8 +94,10 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                         <StarIcon className="h-7 w-7" />
 
                         <div>
-                            <p className="text-lg">Conducteur fiable</p>
-                            <p className="text-muted-foreground">Évaluation moyene de 3.5 par 80 personnes</p>
+                            <p className="text-lg">Conducteur {ride.ratings.average >= 3 ? "fiable" : "douteux"}</p>
+                            <p className="text-muted-foreground">
+                                Évaluation moyene de {ride.ratings.average} par {ride.ratings.count} personnes
+                            </p>
                         </div>
                     </div>
                 </section>
