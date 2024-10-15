@@ -128,16 +128,13 @@ export default function RideFilter({ initial }: { initial: GetRidesOptions }) {
                                     name={field.name}
                                     value={field.value?.toString()}
                                     disabled={field.disabled}
-                                    onValueChange={(v) => field.onChange(v === "reset" ? 0 : +v)}
+                                    onValueChange={(v) => field.onChange(+v)}
                                     onOpenChange={field.onBlur}
                                 >
                                     <SelectTrigger className="bg-background">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="reset" className="text-muted-foreground">
-                                            Réinitialiser
-                                        </SelectItem>
                                         <SelectItem value="1">1</SelectItem>
                                         <SelectItem value="2">2</SelectItem>
                                         <SelectItem value="3">3</SelectItem>
