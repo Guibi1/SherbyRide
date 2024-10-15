@@ -3,6 +3,7 @@ package sherby.ride.api;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static jakarta.ws.rs.core.Response.Status.UNAUTHORIZED;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.oidc.UserInfo;
@@ -57,12 +58,24 @@ public class ProfileResource {
 
     @PUT
     public Uni<Response> updateProfile(Profile profile) {
-        if (profile == null || profile.phone == null) {
-            throw new WebApplicationException("Profile phone was not set on request.", 422);
+        if (!profile.cip.equals(userInfo.getPreferredUserName())) {
+            return Uni.createFrom().item(Response.status(UNAUTHORIZED).build());
+        }
+
+        if (profile.email == null || profile.email.isEmpty()) {
+            return Uni.createFrom().item(Response.status(BAD_REQUEST).build());
+        }
+
+        if (profile.phone == null || profile.phone.isEmpty()) {
+            return Uni.createFrom().item(Response.status(BAD_REQUEST).build());
+        }
+
+        if (profile.faculty == null || profile.faculty.isEmpty()) {
+            return Uni.createFrom().item(Response.status(BAD_REQUEST).build());
         }
 
         return Panache
-                .withTransaction(() -> Profile.<Profile>findById(userInfo.getPreferredUserName())
+                .withTransaction(() -> Profile.<Profile>findById(profile.cip)
                         .onItem().ifNotNull()
                         .invoke(entity -> entity.updateProfile(profile.email, profile.phone, profile.faculty))
                         .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
@@ -106,6 +119,6 @@ public class ProfileResource {
         });
     }
 
-    record CreateRatingDOT(String evaluator, String evaluated, String trajet, float note) {
+    private record CreateRatingDOT(String evaluator, String evaluated, String trajet, float note) {
     }
 }

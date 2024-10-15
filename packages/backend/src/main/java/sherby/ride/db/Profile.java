@@ -1,29 +1,23 @@
 package sherby.ride.db;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
-import jakarta.inject.Inject;
+import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.Transient;
 
 @Entity
 @Cacheable
 public class Profile extends PanacheEntityBase {
-
-    @Transient
-    @Inject
-    EntityManager em;
 
     @Id
     @Column(length = 8, unique = true)
@@ -42,20 +36,25 @@ public class Profile extends PanacheEntityBase {
     public String faculty;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "evaluated", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    public List<Rating> ratings = new ArrayList<>();
+    @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Trajet> rides;
 
-    // Méthode pour mettre à jour un profil
-    public void updateProfile(String email, String phone, String faculty) {
+    @JsonIgnore
+    @OneToMany(mappedBy = "evaluated", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Rating> ratings;
+
+    @JsonIgnore
+    public Uni<ProfileRatings> getRatings() {
+        return Mutiny.fetch(ratings).onItem().transform(
+                ratings -> new ProfileRatings((float) ratings.stream().mapToDouble(r -> r.note).average().orElse(0),
+                        ratings.size()));
+    }
+
+    public Uni<Profile> updateProfile(String email, String phone, String faculty) {
         this.email = email;
         this.phone = phone;
         this.faculty = faculty;
-        persist();
-    }
-
-    public ProfileRatings getRating() {
-        return new ProfileRatings((float) ratings.stream().mapToDouble(r -> r.note).average().orElse(0),
-                ratings.size());
+        return persist();
     }
 
     public record ProfileRatings(Float average, Integer count) {

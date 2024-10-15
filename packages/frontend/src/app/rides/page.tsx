@@ -2,7 +2,7 @@ import ErrorOccured from "@/components/ErrorOccured";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type GetRidesOptions, getRides } from "@/lib/api";
-import { CalendarClockIcon, CarFrontIcon, CarIcon, CircleOffIcon, UserIcon } from "lucide-react";
+import { CalendarClockIcon, CarFrontIcon, CarIcon, UserIcon } from "lucide-react";
 import Link from "next/link";
 import RideFilter from "./RideFilter";
 
@@ -10,7 +10,6 @@ type PageProps = { searchParams: GetRidesOptions };
 
 export default async function RidesPage({ searchParams }: PageProps) {
     const rides = await getRides(searchParams);
-    console.log("🚀 ~ RidesPage ~ rides:", rides);
 
     if (typeof rides === "string") {
         return (
