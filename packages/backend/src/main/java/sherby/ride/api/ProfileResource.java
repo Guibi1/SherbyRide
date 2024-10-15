@@ -1,5 +1,6 @@
 package sherby.ride.api;
 
+import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
 import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 
@@ -19,6 +20,8 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import sherby.ride.db.Profile;
+import sherby.ride.db.Rating;
+import sherby.ride.db.Trajet;
 
 @Path("/profile")
 @Authenticated
@@ -33,7 +36,7 @@ public class ProfileResource {
     public Uni<Response> getCurrentProfile() {
         return Profile.findById(userInfo.getPreferredUserName())
                 .onItem().ifNotNull().transform(p -> Response.ok(p).build())
-                .onItem().ifNull().continueWith(Response.ok().status(NOT_FOUND)::build);
+                .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build);
     }
 
     @GET
@@ -63,6 +66,46 @@ public class ProfileResource {
                         .onItem().ifNotNull()
                         .invoke(entity -> entity.updateProfile(profile.email, profile.phone, profile.faculty))
                         .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
-                        .onItem().ifNull().continueWith(Response.ok().status(NOT_FOUND)::build));
+                        .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
+    }
+
+    @POST
+    @Path("/{cip}/rating")
+    public Uni<Response> createRating(@PathParam("cip") String cip, CreateRatingDOT json) {
+
+        if (json.evaluator == null || json.evaluator.isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        if (json.evaluated == null || json.evaluated.isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        if (json.trajet == null || json.trajet.isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        if (json.note < 0 || json.note > 5) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        if (!json.evaluator.equals(userInfo.getPreferredUserName())) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
+        }
+
+        return Panache.withTransaction(() -> {
+            var evaluatedUni = Profile.<Profile>findById(json.evaluated);
+            var evaluatorUni = Profile.<Profile>findById(json.evaluator);
+            var trajetUni = Trajet.<Trajet>findById(json.trajet);
+
+            return Uni.combine().all().unis(evaluatedUni, evaluatorUni, trajetUni)
+                    .withUni((evaluated, evaluator, trajet) -> new Rating(evaluator, evaluated, trajet, json.note)
+                            .<Rating>persist())
+                    .onItem().ifNotNull().transform(rating -> Response.ok(rating).status(CREATED).build())
+                    .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build);
+        });
+    }
+
+    record CreateRatingDOT(String evaluator, String evaluated, String trajet, float note) {
     }
 }
