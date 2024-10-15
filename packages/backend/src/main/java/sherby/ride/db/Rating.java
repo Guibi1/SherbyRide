@@ -22,4 +22,14 @@ public class Rating extends PanacheEntity {
 
     @Column
     public float note;
+
+    public Rating() {
+    }
+
+    public Rating(Profile evaluator, Profile evaluated, Trajet trajet, float note) {
+        this.evaluator = evaluator;
+        this.evaluated = evaluated;
+        this.trajet = trajet;
+        this.note = note;
+    }
 }

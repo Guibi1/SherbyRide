@@ -68,7 +68,7 @@ public class TrajetResource {
 
         if (json.departureTime == null || json.departureTime.before(new Date())) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Vous devez entrer un lieu d'arrivée").build());
+                    .entity("Vous devez entrer un temps de départ").build());
         }
 
         return Panache.withTransaction(
