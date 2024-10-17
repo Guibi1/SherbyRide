@@ -1,10 +1,13 @@
+import RideCard from "@/components/RideCard";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { CarIcon, SearchIcon, UserIcon } from "lucide-react";
+import { getRides } from "@/lib/api";
+import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 
 export default async function HomePage() {
+    const rides = await getRides({ from: "Sherbrooke" });
+
     return (
         <main>
             <section className="py-12 md:py-24 lg:py-32 xl:py-48">
@@ -32,35 +35,24 @@ export default async function HomePage() {
                 </div>
             </section>
 
-            <section className="py-12 md:py-24 lg:py-32 bg-primary/10 dark:bg-card">
-                <div className="container px-4 md:px-6">
-                    <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Trajets disponibles</h2>
-                    <div className="grid gap-6 mt-8 sm:grid-cols-2 lg:grid-cols-3">
-                        {[1, 2, 3, 4, 5, 6].map((ride) => (
-                            <Card key={ride} className="bg-background">
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        Sherbrooke <CarIcon size="1em" /> Montréal
-                                    </CardTitle>
-                                </CardHeader>
-
-                                <CardContent>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Date: June 15, 2023</p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">Time: 9:00 AM</p>
-                                    <div className="flex items-center mt-4">
-                                        <UserIcon className="h-4 w-4 mr-2" />
-                                        <span className="text-sm font-medium">3 places disponibles</span>
-                                    </div>
-
+            {typeof rides !== "string" && (
+                <section className="py-12 md:py-24 lg:py-32 bg-primary/10 dark:bg-card">
+                    <div className="container px-4 md:px-6">
+                        <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
+                            Trajets disponibles
+                        </h2>
+                        <div className="grid gap-6 mt-8 sm:grid-cols-2 lg:grid-cols-3">
+                            {rides.map((ride) => (
+                                <RideCard key={ride.id} ride={ride} className="bg-background">
                                     <Button className="w-full mt-4" asChild>
-                                        <Link href={`/rides/${ride}`}>Réserver maintenant</Link>
+                                        <Link href={`/rides/${ride.id}`}>Réserver maintenant</Link>
                                     </Button>
-                                </CardContent>
-                            </Card>
-                        ))}
+                                </RideCard>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            )}
         </main>
     );
 }
