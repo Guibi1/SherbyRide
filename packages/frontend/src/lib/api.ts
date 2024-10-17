@@ -1,15 +1,16 @@
 import { isServer } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
-import { string } from "zod";
 import { auth } from "./auth";
-import type { Profile, Ride } from "./types";
+import type { Profile, ProfileRatings, Ride } from "./types";
 
-export async function getProfile() {
+export async function getProfile<R extends boolean>(
+    ratings?: R,
+): Promise<(R extends true ? Profile & { ratings: ProfileRatings } : Profile) | null> {
     const session = isServer ? await auth() : await getSession();
     if (!session) return null;
     const token = session.accessToken;
 
-    const res = await fetch("http://localhost:8080/profile", {
+    const res = await fetch(`http://localhost:8080/profile?ratings=${ratings}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
 
@@ -19,7 +20,10 @@ export async function getProfile() {
     }
 
     const json = await res.json();
-    return json as Profile;
+    if (ratings) {
+        return { ...json.profile, ratings: json.ratings };
+    }
+    return json;
 }
 
 export type GetRidesOptions = {
@@ -60,15 +64,4 @@ export async function getRide(id: string): Promise<Ride | string> {
 
     const json = await res.json();
     return { ...json, departureTime: new Date(json.departureTime) } as Ride;
-}
-
-export async function getRating(profileId: string): Promise<number> {
-    const session = isServer ? await auth() : await getSession();
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-
-    const res = await fetch(`http://localhost:8080/ratings/${profileId}`, { headers });
-
-    const json = await res.json();
-    return json.rating as number; // Suppose que la réponse JSON contient un champ `rating`
 }

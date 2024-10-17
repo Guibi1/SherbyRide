@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { type Profile, faculties } from "@/lib/types";
+import { type Profile, type ProfileRatings, faculties } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import StarRating from "./StarRating";
 
 const formSchema = z.object({
     email: z.string().email(),
@@ -20,7 +21,7 @@ const formSchema = z.object({
     faculty: z.enum(faculties),
 });
 
-export default function ProfileCreationForm({ profile }: { profile: Profile }) {
+export default function ProfileCreationForm({ profile }: { profile: Profile & { ratings: ProfileRatings } }) {
     const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -70,6 +71,9 @@ export default function ProfileCreationForm({ profile }: { profile: Profile }) {
                 <CardContent>
                     <CardTitle>{profile.name}</CardTitle>
                     <CardDescription>{profile.cip}</CardDescription>
+
+                    <p className="pt-4">Ma note</p>
+                    <StarRating ratings={profile.ratings} />
                 </CardContent>
             </Card>
 

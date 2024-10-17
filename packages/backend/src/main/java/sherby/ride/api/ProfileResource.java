@@ -17,10 +17,12 @@ import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import sherby.ride.db.Profile;
+import sherby.ride.db.Profile.ProfileRatings;
 import sherby.ride.db.Rating;
 import sherby.ride.db.Trajet;
 
@@ -34,7 +36,17 @@ public class ProfileResource {
     UserInfo userInfo;
 
     @GET
-    public Uni<Response> getCurrentProfile() {
+    public Uni<Response> getCurrentProfile(@QueryParam(value = "ratings") Boolean withRatings) {
+        if (withRatings) {
+            return Profile.<Profile>findById(userInfo.getPreferredUserName())
+                    .onItem()
+                    .transformToUni(
+                            profile -> profile.getRatings().onItem()
+                                    .transform(ratings -> new CurrentProfileDOT(profile, ratings)))
+                    .onItem().ifNotNull().transform(p -> Response.ok(p).build())
+                    .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build);
+        }
+
         return Profile.findById(userInfo.getPreferredUserName())
                 .onItem().ifNotNull().transform(p -> Response.ok(p).build())
                 .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build);
@@ -117,6 +129,9 @@ public class ProfileResource {
                     .onItem().ifNotNull().transform(rating -> Response.ok(rating).status(CREATED).build())
                     .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build);
         });
+    }
+
+    private record CurrentProfileDOT(Profile profile, ProfileRatings ratings) {
     }
 
     private record CreateRatingDOT(String evaluator, String evaluated, String trajet, float note) {

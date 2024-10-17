@@ -1,22 +1,22 @@
-import { Star } from "lucide-react"
+import type { ProfileRatings } from "@/lib/types";
+import { StarIcon } from "lucide-react";
 
 interface StarRatingProps {
-    rating: number
-    maxRating?: number
-    size?: number
+    ratings: ProfileRatings;
+    maxRating?: number;
+    size?: number;
 }
 
-export default function StarRating({ rating, maxRating = 5, size = 24 }: StarRatingProps) {
+export default function StarRating({ ratings, maxRating = 5, size = 24 }: StarRatingProps) {
     return (
-        <div className="flex items-center">
+        <div className="flex gap-1 items-center">
             {[...Array(maxRating)].map((_, index) => (
-                <Star
+                <StarIcon
                     key={index}
                     size={size}
-                    className={`${index < rating ? "text-yellow-400 fill-yellow-400" : "text-gray-300"
-                        } mr-1`}
+                    className={index < ratings.average ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}
                 />
             ))}
         </div>
-    )
+    );
 }
