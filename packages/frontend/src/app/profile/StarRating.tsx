@@ -14,7 +14,7 @@ export default function StarRating({ ratings, maxRating = 5, size = 24 }: StarRa
                 <StarIcon
                     key={index}
                     size={size}
-                    className={index < ratings.average ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}
+                    className={index < Math.round(ratings.average) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}
                 />
             ))}
         </div>
