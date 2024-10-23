@@ -8,9 +8,9 @@ import { getSession, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-type BookingCardProps = { ride: string; profile: Profile | null };
+type BookingCardProps = { ride: string; profile: Profile | null; onReservationSuccess: (rideId: string) => void };
 
-export default function BookingCard({ ride, profile }: BookingCardProps) {
+export default function BookingCard({ ride, profile, onReservationSuccess }: BookingCardProps) {
     const router = useRouter();
     const { mutate, isPending } = useMutation({
         async mutationFn() {
@@ -19,13 +19,14 @@ export default function BookingCard({ ride, profile }: BookingCardProps) {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    // cip: profile.cip,
+                    // cip: profile?.cip
                 }),
             });
             if (!res.ok) throw `${res.status}: ${res.statusText}`;
         },
         onSuccess() {
-            toast.success("La demande à été envoyée");
+            toast.success("La demande a été envoyée");
+            onReservationSuccess(ride);  // Met à jour la page des trajets pour indiquer que l'offre a été réservée
             router.push("/rides");
         },
         onError(error) {
@@ -60,7 +61,9 @@ export default function BookingCard({ ride, profile }: BookingCardProps) {
             <CardContent className="flex flex-col gap-2 items-center">
                 <p>Le conducteur devra accepter votre demande</p>
 
-                <Button onClick={() => mutate()}>Demander une place</Button>
+                <Button onClick={() => mutate()} disabled={isPending}>
+                    {isPending ? "Demande en cours..." : "Demander une place"}
+                </Button>
             </CardContent>
         </Card>
     );
