@@ -1,27 +1,31 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { getSession } from "next-auth/react";
 import { useForm } from "react-hook-form";
-import { useRouter } from "next/navigation";
-import type { User } from "@/lib/auth";
 
-// Définition du type pour un trajet
-interface Trajet {
+// Type importé à partir de votre module d'authentification
+import type { User } from "@/lib/auth";
+import router from "next/router";
+
+type OffersListFormProps = {
+    user: User; // Définition du type de la prop `user`
+};
+
+type Trajet = {
     id: string;
     departureLoc: string;
     arrivalLoc: string;
     departureTime: string;
     maxPassengers: number;
-}
+    // Ajoutez d'autres propriétés si nécessaire
+};
 
-export default function MesTrajets({ user }: { user: User }) {
-    const [trajets, setTrajets] = useState<Trajet[]>([]); // Typage des trajets
+export default function OffersListForm({ user }: OffersListFormProps) {
+    const [trajets, setTrajets] = useState<Trajet[]>([]);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     useEffect(() => {
         const fetchTrajets = async () => {
@@ -33,15 +37,12 @@ export default function MesTrajets({ user }: { user: User }) {
                 });
                 if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
 
-                const data: Trajet[] = await res.json(); // Spécifiez que data est un tableau de Trajet
+                const data = await res.json();
                 setTrajets(data);
-            } catch (error: unknown) {
-                // Typage de l'erreur comme 'unknown'
-                if (error instanceof Error) {
-                    toast.error("Erreur lors de la récupération des trajets", { description: error.message });
-                } else {
-                    toast.error("Une erreur inconnue est survenue.");
-                }
+            } catch (error) {
+                toast.error("Erreur lors de la récupération des trajets", {
+                    description: (error as Error).message,
+                });
             } finally {
                 setLoading(false);
             }
@@ -56,83 +57,30 @@ export default function MesTrajets({ user }: { user: User }) {
             {loading ? (
                 <p>Chargement...</p>
             ) : trajets.length > 0 ? (
-                trajets.map((trajet) => {
-                    // Utilisation de useForm pour chaque trajet
-                    const form = useForm({
-                        defaultValues: {
-                            from: trajet.departureLoc,
-                            to: trajet.arrivalLoc,
-                            date: new Date(trajet.departureTime).toLocaleString(undefined, {
-                                dateStyle: "long",
-                                timeStyle: "short",
-                            }),
-                            passengers: trajet.maxPassengers.toString(),
-                        },
-                    });
-
-                    return (
-                        <Form key={trajet.id} {...form}>
-                            <form className="flex flex-col gap-4 mb-6">
-                                <FormField
-                                    control={form.control}
-                                    name="from"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Lieu de départ</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} disabled />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="to"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Destination</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} disabled />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="date"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Date et heure de départ</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} disabled />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="passengers"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Passagers max</FormLabel>
-                                            <FormControl>
-                                                <Input {...field} disabled />
-                                            </FormControl>
-                                        </FormItem>
-                                    )}
-                                />
-                            </form>
-                        </Form>
-                    );
-                })
+                trajets.map((trajet) => (
+                    <Card key={trajet.id} className="mb-4">
+                        <CardHeader>
+                            <CardTitle>Offre de Covoiturage</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p><strong>Lieu de départ :</strong> {trajet.departureLoc}</p>
+                            <p><strong>Destination :</strong> {trajet.arrivalLoc}</p>
+                            <p>
+                                <strong>Date et heure de départ :</strong>{" "}
+                                {new Date(trajet.departureTime).toLocaleString(undefined, {
+                                    dateStyle: "long",
+                                    timeStyle: "short",
+                                })}
+                            </p>
+                            <p><strong>Passagers max :</strong> {trajet.maxPassengers}</p>
+                        </CardContent>
+                    </Card>
+                ))
             ) : (
                 <p>Aucune offre de covoiturage trouvée.</p>
             )}
 
-            <Button className="mt-4" onClick={() => router.push("/offers")}>
+            <Button className="mt-4" onClick={() => router.push("/trajet/new")}>
                 Créer une nouvelle offre
             </Button>
         </div>
