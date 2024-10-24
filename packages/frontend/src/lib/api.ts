@@ -31,6 +31,7 @@ export type GetRidesOptions = {
     to?: string;
     date?: Date;
     passengers?: number;
+    mine?: boolean;
 };
 
 export async function getRides(options?: GetRidesOptions): Promise<Ride[] | string> {
