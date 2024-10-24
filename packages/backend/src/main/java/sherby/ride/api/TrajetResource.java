@@ -74,7 +74,8 @@ public class TrajetResource {
                                     .onItem().transformToUni(driver -> driver.getRatings())
                                     .onItem().transform(ratings -> toRideDOT(trajet, ratings)))
                             .toList();
-                    if (unis.isEmpty()) return Uni.createFrom().item(new ArrayList<RideDOT>());
+                    if (unis.isEmpty())
+                        return Uni.createFrom().item(new ArrayList<RideDOT>());
                     return Uni.join().all(unis).andCollectFailures();
                 });
     }

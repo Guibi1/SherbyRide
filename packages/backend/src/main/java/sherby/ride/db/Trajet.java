@@ -52,7 +52,7 @@ public class Trajet extends PanacheEntity {
         return list("arrivalLoc", arrivalLoc);
     }
 
-    public Uni<List<PanacheEntity>> findBydepartureTime(String departureTime) {
+    public Uni<List<Trajet>> findBydepartureTime(String departureTime) {
         return list("departureTime", departureTime);
     }
 }

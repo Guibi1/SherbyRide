@@ -20,6 +20,14 @@ export type Ride = {
     ratings: ProfileRatings;
 };
 
+export type Car = {
+    licencePlate: string;
+    type: string;
+    model: string;
+    year: number;
+    color: Color;
+};
+
 export const faculties = [
     "Génie",
     "Droit",
@@ -31,3 +39,6 @@ export const faculties = [
     "Sciences de l'activité physique",
 ] as const;
 export type Faculty = (typeof faculties)[number];
+
+export const colors = ["Blanche", "Noire", "Grise", "Rouge", "Blue", "Verte", "Orange", "Beige"] as const;
+export type Color = (typeof colors)[number];

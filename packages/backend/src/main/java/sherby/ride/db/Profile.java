@@ -44,6 +44,10 @@ public class Profile extends PanacheEntityBase {
     public List<Rating> ratings;
 
     @JsonIgnore
+    @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Car> cars;
+
+    @JsonIgnore
     public Uni<ProfileRatings> getRatings() {
         return Mutiny.fetch(ratings).onItem().transform(
                 ratings -> new ProfileRatings((float) ratings.stream().mapToDouble(r -> r.note).average().orElse(0),
