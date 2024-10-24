@@ -43,14 +43,18 @@ public class TrajetResource {
     private UserInfo userInfo;
 
     @GET
-    public Uni<List<RideDOT>> get(@QueryParam(value = "from") String departure,
+    public Uni<List<RideDOT>> get(@QueryParam(value = "mine") Boolean myRides,
+            @QueryParam(value = "from") String departure,
             @QueryParam(value = "to") String arrival,
             @QueryParam(value = "date") Instant date,
             @QueryParam(value = "passengers") Integer minPassengers) {
         List<Object> params = new ArrayList<>(5);
         StringJoiner queryBuilder = new StringJoiner(" AND ");
         if (userInfo.getPreferredUserName() != null) {
-            queryBuilder.add("driver.id != ?" + (params.size() + 1));
+            if (myRides != null && myRides)
+                queryBuilder.add("driver.id = ?" + (params.size() + 1));
+            else
+                queryBuilder.add("driver.id != ?" + (params.size() + 1));
             params.add(userInfo.getPreferredUserName());
         }
         if (departure != null && !departure.isEmpty()) {
@@ -72,15 +76,13 @@ public class TrajetResource {
 
         return Panache.withTransaction(
                 () -> Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
-                        .onItem()
-                        .transformToUni(list -> Multi.createFrom().iterable(list).onItem()
-                                .transformToUni(ride -> Uni.combine().all()
+                        .onItem().transformToMulti(trajets -> Multi.createFrom().iterable(trajets))
+                        .onItem().transformToUniAndConcatenate(ride -> Uni.combine().all()
                                         .unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car),
                                                 ride.getReservedSeats())
                                         .withUni((driver, car, seats) -> driver.getRatings()
                                                 .onItem()
-                                                .<RideDOT>transform(ratings -> toRideDOT(ride, seats, ratings, car))))
-                                .concatenate().collect().asList()));
+                                                .<RideDOT>transform(ratings -> toRideDOT(ride, seats, ratings, car)))).collect().asList());
     }
 
     @GET
@@ -95,18 +97,17 @@ public class TrajetResource {
     @PUT
     @Path("{id}")
     @Authenticated
-    public Uni<Response> bookRide(String id) {
-
+    public Uni<Response> bookRide(Long id) {
         String cip = userInfo.getPreferredUserName();
 
-        return Panache.withTransaction(
-                () -> Uni.combine().all().unis(Profile.<Profile>findById(cip), Trajet.<Trajet>findById(id))
-                        .withUni((user, trajet) -> {
-                            trajet.passengers.add(user);
-                            return trajet.<Trajet>persist();
-                        })
-                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
-                        .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
+        return Panache.withTransaction(() -> Uni.combine().all()
+                .unis(Profile.<Profile>findById(cip), Trajet.<Trajet>findById(id))
+                .withUni((user, trajet) -> Mutiny.fetch(trajet.passengers).onItem().transformToUni(passengers -> {
+                    passengers.add(user);
+                    return trajet.<Trajet>persist();
+                }))
+                .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
+                .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
     }
 
     @POST
