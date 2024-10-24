@@ -22,6 +22,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
@@ -74,20 +75,38 @@ public class TrajetResource {
                         .onItem()
                         .transformToUni(list -> Multi.createFrom().iterable(list).onItem()
                                 .transformToUni(ride -> Uni.combine().all()
-                                        .unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car))
-                                        .withUni((driver, car) -> driver.getRatings()
-                                                .onItem().<RideDOT>transform(ratings -> toRideDOT(ride, ratings, car))))
+                                        .unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car),
+                                                ride.getReservedSeats())
+                                        .withUni((driver, car, seats) -> driver.getRatings()
+                                                .onItem()
+                                                .<RideDOT>transform(ratings -> toRideDOT(ride, seats, ratings, car))))
                                 .concatenate().collect().asList()));
     }
 
     @GET
     @Path("{id}")
     public Uni<RideDOT> getSingle(Long id) {
-        return Panache.withTransaction(() -> Trajet.<Trajet>findById(id)
-                .onItem().transformToUni(
-                        ride -> Uni.combine().all().unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car))
-                                .withUni((driver, car) -> driver.getRatings()
-                                        .onItem().<RideDOT>transform(ratings -> toRideDOT(ride, ratings, car)))));
+        return Trajet.<Trajet>findById(id)
+                .chain(trajet -> trajet.getReservedSeats()
+                        .chain(seats -> trajet.driver.getRatings().chain(ratings -> Mutiny.fetch(trajet.car)
+                                .onItem().transform(car -> toRideDOT(trajet, seats, ratings, car)))));
+    }
+
+    @PUT
+    @Path("{id}")
+    @Authenticated
+    public Uni<Response> bookRide(String id) {
+
+        String cip = userInfo.getPreferredUserName();
+
+        return Panache.withTransaction(
+                () -> Uni.combine().all().unis(Profile.<Profile>findById(cip), Trajet.<Trajet>findById(id))
+                        .withUni((user, trajet) -> {
+                            trajet.passengers.add(user);
+                            return trajet.<Trajet>persist();
+                        })
+                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
+                        .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
     }
 
     @POST
@@ -114,23 +133,22 @@ public class TrajetResource {
                     .entity("Vous devez entrer un temps de départ").build());
         }
 
-        return Panache.withTransaction(() -> Uni.combine().all()
-                .unis(Profile.<Profile>findById(json.driver), Car.<Car>findById(json.licencePlate))
-                .withUni((driver, car) -> {
-                    if (driver != car.owner)
-                        return Uni.createFrom().nullItem();
-                    var trajet = new Trajet(json.departureLoc, json.arrivalLoc, json.departureTime,
-                            json.maxPassengers, driver, car);
-                    return trajet.<Trajet>persist();
-                })
-                .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build()))
+        return Panache.withTransaction(
+                () -> Profile.<Profile>findById(json.driver)
+                        .chain(driver -> Car.<Car>findById(json.licencePlate).chain(car -> {
+                            var trajet = new Trajet(json.departureLoc, json.arrivalLoc, json.departureTime,
+                                    json.maxPassengers,
+                                    List.<Profile>of(), driver, car);
+                            return trajet.<Trajet>persist();
+                        }))
+                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build()))
                 .onItem().ifNull().continueWith(Response.ok().status(BAD_REQUEST)::build);
     }
 
-    private static RideDOT toRideDOT(Trajet ride, ProfileRatings ratings, Car car) {
+    private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car) {
         return new RideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
-                ride.maxPassengers, ratings, car);
+                ride.maxPassengers, reservedSeats, ratings, car);
     }
 
     private record RideDOT(
@@ -139,7 +157,9 @@ public class TrajetResource {
             String arrivalLoc,
             Date departureTime,
             int maxPassengers,
-            ProfileRatings ratings, Car car) {
+            int reservedSeats,
+            ProfileRatings ratings,
+            Car car) {
     }
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,

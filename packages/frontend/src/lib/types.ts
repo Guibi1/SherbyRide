@@ -17,6 +17,7 @@ export type Ride = {
     arrivalLoc: string;
     departureTime: Date;
     maxPassengers: number;
+    reservedSeats: number;
     ratings: ProfileRatings;
     car: Car;
 };
