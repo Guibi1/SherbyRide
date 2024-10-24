@@ -72,7 +72,7 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                         <UserIcon className="h-7 w-7" />
 
                         <div>
-                            <p className="text-lg">{ride.maxPassengers} places disponibles</p>
+                            <p className="text-lg">{ride.maxPassengers - ride.reservedSeats} places disponibles</p>
                             <p className="text-muted-foreground">Sur {ride.maxPassengers} places totales</p>
                         </div>
                     </div>
