@@ -30,7 +30,7 @@ const RideCard = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
 
                 <div className="flex items-center gap-2">
                     <UserIcon className="h-4 w-4" strokeWidth={2.3} />
-                    {ride.maxPassengers} places disponibles
+                    {ride.maxPassengers - ride.reservedSeats} places disponibles
                 </div>
 
                 {children}

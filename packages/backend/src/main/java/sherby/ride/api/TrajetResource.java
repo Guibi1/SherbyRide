@@ -100,14 +100,22 @@ public class TrajetResource {
     public Uni<Response> bookRide(Long id) {
         String cip = userInfo.getPreferredUserName();
 
-        return Panache.withTransaction(() -> Uni.combine().all()
-                .unis(Profile.<Profile>findById(cip), Trajet.<Trajet>findById(id))
-                .withUni((user, trajet) -> Mutiny.fetch(trajet.passengers).onItem().transformToUni(passengers -> {
-                    passengers.add(user);
-                    return trajet.<Trajet>persist();
-                }))
-                .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
-                .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
+        return Panache.withTransaction(
+                () -> Uni.combine().all().unis(Profile.<Profile>findById(cip), Trajet.<Trajet>findById(id))
+                        .withUni((user, trajet) -> {
+                            if (trajet.driver == user)
+                                return Uni.createFrom().nullItem();
+
+                            return Mutiny.fetch(trajet.passengers).onItem().transformToUni(passengers -> {
+                                if (passengers.contains(user))
+                                    return Uni.createFrom().nullItem();
+
+                                passengers.add(user);
+                                return trajet.<Trajet>persist();
+                            });
+                        })
+                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
+                        .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
     }
 
     @POST
