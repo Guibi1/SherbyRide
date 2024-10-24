@@ -3,15 +3,19 @@ package sherby.ride.db;
 import java.util.Date;
 import java.util.List;
 
+import org.hibernate.reactive.mutiny.Mutiny;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Cacheable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity
 @Cacheable
@@ -37,15 +41,28 @@ public class Trajet extends PanacheEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     public Car car;
 
+    @JsonIgnore
+    @OneToMany(mappedBy = "cip", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Profile> passengers;
+
+    @JsonIgnore
+    public Uni<Integer> getReservedSeats() {
+        return Mutiny.fetch(passengers).onItem().transform(
+                passengers -> passengers.size());
+    }
+
     public Trajet() {
     }
 
-    public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers, Profile driver, Car car) {
+    public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,
+            List<Profile> passengers,
+            Profile driver, Car car) {
         this.departureLoc = departureLoc;
         this.arrivalLoc = arrivalLoc;
         this.departureTime = departureTime;
         this.maxPassengers = maxPassengers;
         this.driver = driver;
+        this.passengers = passengers;
         this.car = car;
     }
 
