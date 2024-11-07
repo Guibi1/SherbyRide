@@ -1,5 +1,5 @@
 import ErrorOccured from "@/components/ErrorOccured";
-import { getRides } from "@/lib/api";
+import { getMyRides } from "@/lib/api";
 import { auth } from "@/lib/auth";
 import { notFound } from "next/navigation";
 import OffersListForm from "./OffersListForm";
@@ -7,7 +7,7 @@ import OffersListForm from "./OffersListForm";
 export default async function OffersListPage() {
     const session = await auth();
     if (!session) notFound();
-    const rides = await getRides({ mine: true });
+    const rides = await getMyRides();
 
     if (typeof rides === "string") {
         return (

@@ -86,6 +86,34 @@ public class TrajetResource {
     }
 
     @GET
+    @Path("/me")
+    public Uni<List<MyRideDOT>> get() {
+        return Panache.withTransaction(() -> Profile.<Profile>findById(userInfo.getPreferredUserName())
+                .onItem()
+                .transformToUni(profile -> Uni.combine().all()
+                        .unis(Mutiny.fetch(profile.rides), Mutiny.fetch(profile.passengerInRides))
+                        .withUni((rides, passengerInRides) -> {
+                            var multiRide = Multi.createFrom().iterable(rides)
+                                    .onItem().transformToUni(ride -> Uni.combine()
+                                            .all()
+                                            .unis(Mutiny.fetch(ride.driver), ride.getReservedSeats())
+                                            .withUni((driver, seats) -> driver.getRatings().onItem()
+                                                    .transform(ratings -> toMyRideDOT(ride, ratings, seats, true))))
+                                    .concatenate();
+                            var multiPassengerRide = Multi.createFrom().iterable(passengerInRides)
+                                    .onItem().transformToUni(ride -> Uni.combine()
+                                            .all()
+                                            .unis(Mutiny.fetch(ride.driver), ride.getReservedSeats())
+                                            .withUni((driver, seats) -> driver.getRatings().onItem()
+                                                    .transform(ratings -> toMyRideDOT(ride, ratings, seats, false))))
+                                    .concatenate();
+
+                            return Multi.createBy().merging().streams(multiRide, multiPassengerRide).collect()
+                                    .asList();
+                        })));
+    }
+
+    @GET
     @Path("{id}")
     public Uni<RideDOT> getSingle(Long id) {
         return Trajet.<Trajet>findById(id)
@@ -160,6 +188,14 @@ public class TrajetResource {
                 ride.maxPassengers, reservedSeats, ratings, car);
     }
 
+    private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, int reservedSeats, boolean mine) {
+        return new MyRideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
+                ride.departureTime,
+                ride.maxPassengers,
+                reservedSeats,
+                ratings, mine);
+    }
+
     private record RideDOT(
             Long id,
             String departureLoc,
@@ -169,6 +205,16 @@ public class TrajetResource {
             int reservedSeats,
             ProfileRatings ratings,
             Car car) {
+    }
+
+    private record MyRideDOT(
+            Long id,
+            String departureLoc,
+            String arrivalLoc,
+            Date departureTime,
+            int maxPassengers,
+            int reservedSeats,
+            ProfileRatings ratings, boolean mine) {
     }
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,

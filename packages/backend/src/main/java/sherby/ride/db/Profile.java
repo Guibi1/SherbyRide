@@ -6,6 +6,7 @@ import org.hibernate.reactive.mutiny.Mutiny;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntityBase;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Cacheable;
@@ -39,7 +40,7 @@ public class Profile extends PanacheEntityBase {
     @JsonIgnore
     @OneToMany(mappedBy = "driver", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Trajet> rides;
-    
+
     @JsonIgnore
     @ManyToMany(mappedBy = "passengers", cascade = CascadeType.ALL)
     public List<Trajet> passengerInRides;
@@ -54,9 +55,9 @@ public class Profile extends PanacheEntityBase {
 
     @JsonIgnore
     public Uni<ProfileRatings> getRatings() {
-        return Mutiny.fetch(ratings).onItem().transform(
+        return Panache.withTransaction(() -> Mutiny.fetch(ratings).onItem().transform(
                 ratings -> new ProfileRatings((float) ratings.stream().mapToDouble(r -> r.note).average().orElse(0),
-                        ratings.size()));
+                        ratings.size())));
     }
 
     public Uni<Profile> updateProfile(String email, String phone, String faculty) {
