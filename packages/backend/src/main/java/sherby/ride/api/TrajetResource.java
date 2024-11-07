@@ -15,6 +15,7 @@ import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.oidc.UserInfo;
 import io.quarkus.panache.common.Sort;
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -67,17 +68,14 @@ public class TrajetResource {
             params.add(minPassengers);
         }
 
-        return Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
-                .onItem().transformToUni(list -> {
-                    List<Uni<RideDOT>> unis = list.stream()
-                            .map(trajet -> Mutiny.fetch(trajet.driver)
-                                    .onItem().transformToUni(driver -> driver.getRatings())
-                                    .onItem().transform(ratings -> toRideDOT(trajet, ratings)))
-                            .toList();
-                    if (unis.isEmpty())
-                        return Uni.createFrom().item(new ArrayList<RideDOT>());
-                    return Uni.join().all(unis).andCollectFailures();
-                });
+        return Panache.withTransaction(
+                () -> Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
+                        .onItem()
+                        .transformToUni(list -> Multi.createFrom().iterable(list).onItem()
+                                .transformToUni(ride -> Mutiny.fetch(ride.driver)
+                                        .onItem().transformToUni(driver -> driver.getRatings())
+                                        .onItem().transform(ratings -> toRideDOT(ride, ratings)))
+                                .concatenate().collect().asList()));
     }
 
     @GET
