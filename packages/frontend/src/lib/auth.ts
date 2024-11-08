@@ -19,7 +19,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     callbacks: {
         jwt({ token, account, user }) {
             if (account) {
-                return { ...token, accessToken: account.access_token, user };
+                return {
+                    ...token,
+                    provider: account.provider,
+                    id_token: account.id_token,
+                    accessToken: account.access_token,
+                    user,
+                };
             }
             return { ...token };
         },
@@ -28,6 +34,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             // @ts-expect-error
             session.user = token.user;
             return session;
+        },
+    },
+    events: {
+        async signOut(message) {
+            console.log("logout", message);
+            if ("token" in message && message.token?.provider === "keycloak") {
+                const issuerUrl = process.env.AUTH_KEYCLOAK_ISSUER;
+                const logOutUrl = new URL(`${issuerUrl}/protocol/openid-connect/logout`);
+                logOutUrl.searchParams.set("id_token_hint", message.token.id_token as string);
+                await fetch(logOutUrl);
+            }
         },
     },
 });
