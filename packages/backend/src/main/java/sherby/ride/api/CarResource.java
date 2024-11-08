@@ -1,8 +1,11 @@
 package sherby.ride.api;
 
 import static jakarta.ws.rs.core.Response.Status.CREATED;
+import static jakarta.ws.rs.core.Response.Status.FORBIDDEN;
 
 import java.util.List;
+
+import org.hibernate.reactive.mutiny.Mutiny;
 
 import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.oidc.UserInfo;
@@ -10,6 +13,7 @@ import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
@@ -32,13 +36,7 @@ public class CarResource {
     @GET
     public Uni<List<Car>> getCars() {
         return Profile.<Profile>findById(userInfo.getPreferredUserName()).onItem()
-                .transformToUni(profile -> Car.list("owner", profile));
-    }
-
-    @GET
-    @Path("/{plate}")
-    public Uni<Car> getCar(@PathParam("plate") String licencePlate) {
-        return Car.findById(licencePlate);
+                .transformToUni(profile -> Car.list("owner = ?1 and deleted = false", profile));
     }
 
     @POST
@@ -52,32 +50,27 @@ public class CarResource {
                 .onItem().transform(car -> Response.ok(car).status(CREATED).build()));
     }
 
-    // @PUT
-    // public Uni<Response> updateCar(Car profile) {
-    // if (!profile.cip.equals(userInfo.getPreferredUserName())) {
-    // return Uni.createFrom().item(Response.status(UNAUTHORIZED).build());
-    // }
+    @GET
+    @Path("/{plate}")
+    public Uni<Car> getCar(@PathParam("plate") String licencePlate) {
+        return Car.findById(licencePlate);
+    }
 
-    // if (profile.email == null || profile.email.isEmpty()) {
-    // return Uni.createFrom().item(Response.status(BAD_REQUEST).build());
-    // }
+    @DELETE
+    @Path("/{plate}")
+    public Uni<Response> deleteCar(@PathParam("plate") String licencePlate) {
+        return Panache.withTransaction(() -> Car.<Car>findById(licencePlate)
+                .onItem().transformToUni(car -> Mutiny.fetch(car.owner)
+                        .onItem().ifNotNull().transformToUni(owner -> {
+                            if (!owner.cip.equals(userInfo.getPreferredUserName()))
+                                return Uni.createFrom().nullItem();
 
-    // if (profile.phone == null || profile.phone.isEmpty()) {
-    // return Uni.createFrom().item(Response.status(BAD_REQUEST).build());
-    // }
-
-    // if (profile.faculty == null || profile.faculty.isEmpty()) {
-    // return Uni.createFrom().item(Response.status(BAD_REQUEST).build());
-    // }
-
-    // return Panache
-    // .withTransaction(() -> Car.<Car>findById(profile.cip)
-    // .onItem().ifNotNull()
-    // .invoke(entity -> entity.updateCar(profile.email, profile.phone,
-    // profile.faculty))
-    // .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
-    // .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
-    // }
+                            car.deleted = true;
+                            return car.<Car>persist();
+                        }))
+                .onItem().ifNotNull().transform((c) -> Response.ok(c).status(CREATED).build())
+                .onItem().ifNull().continueWith(Response.ok().status(FORBIDDEN)::build));
+    }
 
     private record CreateCarDOT(String licencePlate, String type, String model, int year, String color) {
     }

@@ -83,8 +83,12 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                         <CarFrontIcon className="h-7 w-7" />
 
                         <div>
-                            <p className="text-lg">Berline noire</p>
-                            <p className="text-muted-foreground">Modèle de voiture</p>
+                            <p className="text-lg">
+                                {ride.car.type} {ride.car.color.toLowerCase()}
+                            </p>
+                            <p className="text-muted-foreground">
+                                {ride.car.model}, {ride.car.licencePlate}
+                            </p>
                         </div>
                     </div>
 

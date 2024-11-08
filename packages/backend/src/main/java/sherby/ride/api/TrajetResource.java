@@ -27,6 +27,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import sherby.ride.db.Car;
 import sherby.ride.db.Profile;
 import sherby.ride.db.Profile.ProfileRatings;
 import sherby.ride.db.Trajet;
@@ -72,19 +73,21 @@ public class TrajetResource {
                 () -> Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
                         .onItem()
                         .transformToUni(list -> Multi.createFrom().iterable(list).onItem()
-                                .transformToUni(ride -> Mutiny.fetch(ride.driver)
-                                        .onItem().transformToUni(driver -> driver.getRatings())
-                                        .onItem().transform(ratings -> toRideDOT(ride, ratings)))
+                                .transformToUni(ride -> Uni.combine().all()
+                                        .unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car))
+                                        .withUni((driver, car) -> driver.getRatings()
+                                                .onItem().<RideDOT>transform(ratings -> toRideDOT(ride, ratings, car))))
                                 .concatenate().collect().asList()));
     }
 
     @GET
     @Path("{id}")
     public Uni<RideDOT> getSingle(Long id) {
-        return Trajet.<Trajet>findById(id)
-                .onItem().transformToUni(trajet -> Mutiny.fetch(trajet.driver)
-                        .onItem().transformToUni(driver -> driver.getRatings())
-                        .onItem().transform(ratings -> toRideDOT(trajet, ratings)));
+        return Panache.withTransaction(() -> Trajet.<Trajet>findById(id)
+                .onItem().transformToUni(
+                        ride -> Uni.combine().all().unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car))
+                                .withUni((driver, car) -> driver.getRatings()
+                                        .onItem().<RideDOT>transform(ratings -> toRideDOT(ride, ratings, car)))));
     }
 
     @POST
@@ -111,20 +114,23 @@ public class TrajetResource {
                     .entity("Vous devez entrer un temps de départ").build());
         }
 
-        return Panache.withTransaction(
-                () -> Profile.<Profile>findById(json.driver).onItem().ifNotNull().transformToUni(driver -> {
-                    var trajet = new Trajet(json.departureLoc, json.arrivalLoc, json.departureTime, json.maxPassengers,
-                            driver);
+        return Panache.withTransaction(() -> Uni.combine().all()
+                .unis(Profile.<Profile>findById(json.driver), Car.<Car>findById(json.licencePlate))
+                .withUni((driver, car) -> {
+                    if (driver != car.owner)
+                        return Uni.createFrom().nullItem();
+                    var trajet = new Trajet(json.departureLoc, json.arrivalLoc, json.departureTime,
+                            json.maxPassengers, driver, car);
                     return trajet.<Trajet>persist();
                 })
-                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build()))
+                .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build()))
                 .onItem().ifNull().continueWith(Response.ok().status(BAD_REQUEST)::build);
     }
 
-    private static RideDOT toRideDOT(Trajet ride, ProfileRatings ratings) {
+    private static RideDOT toRideDOT(Trajet ride, ProfileRatings ratings, Car car) {
         return new RideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
-                ride.maxPassengers, ratings);
+                ride.maxPassengers, ratings, car);
     }
 
     private record RideDOT(
@@ -133,10 +139,10 @@ public class TrajetResource {
             String arrivalLoc,
             Date departureTime,
             int maxPassengers,
-            ProfileRatings ratings) {
+            ProfileRatings ratings, Car car) {
     }
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,
-            String driver) {
+            String driver, String licencePlate) {
     }
 }

@@ -67,6 +67,7 @@ export async function getRide(id: string): Promise<Ride | string> {
 }
 
 export async function getCars(): Promise<Car[] | string> {
+    console.log("GET CARS");
     const session = isServer ? await auth() : await getSession();
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -78,5 +79,5 @@ export async function getCars(): Promise<Car[] | string> {
     }
 
     const json = await res.json();
-    return json as Car;
+    return json as Car[];
 }

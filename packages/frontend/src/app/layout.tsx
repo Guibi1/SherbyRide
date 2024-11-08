@@ -21,8 +21,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
     const queryClient = getQueryClient();
     queryClient.prefetchQuery({
-        queryKey: ["profile"],
-        queryFn: getProfile,
+        queryKey: ["user-profile"],
+        queryFn: () => getProfile(false),
     });
 
     return (

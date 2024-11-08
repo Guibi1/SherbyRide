@@ -30,6 +30,9 @@ public class Car extends PanacheEntityBase {
     @Column(length = 50)
     public String color;
 
+    @Column
+    public boolean deleted;
+
     @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     public Profile owner;

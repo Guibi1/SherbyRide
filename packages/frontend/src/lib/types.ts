@@ -18,6 +18,7 @@ export type Ride = {
     departureTime: Date;
     maxPassengers: number;
     ratings: ProfileRatings;
+    car: Car;
 };
 
 export type Car = {
@@ -40,5 +41,8 @@ export const faculties = [
 ] as const;
 export type Faculty = (typeof faculties)[number];
 
-export const colors = ["Blanche", "Noire", "Grise", "Rouge", "Blue", "Verte", "Orange", "Beige"] as const;
+export const colors = ["Blanc", "Noir", "Gris", "Rouge", "Bleu", "Vert", "Orange", "Beige"] as const;
 export type Color = (typeof colors)[number];
+
+export const vehiculeTypes = ["VUS", "Berline", "Camion", "Mini-Van", "Camionnette"] as const;
+export type VehiculeType = (typeof colors)[number];

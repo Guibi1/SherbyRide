@@ -33,15 +33,20 @@ public class Trajet extends PanacheEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     public Profile driver;
 
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    public Car car;
+
     public Trajet() {
     }
 
-    public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers, Profile driver) {
+    public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers, Profile driver, Car car) {
         this.departureLoc = departureLoc;
         this.arrivalLoc = arrivalLoc;
         this.departureTime = departureTime;
         this.maxPassengers = maxPassengers;
         this.driver = driver;
+        this.car = car;
     }
 
     public Uni<List<Trajet>> findBydepartureLoc(String departureLoc) {
