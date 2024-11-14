@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Stream;
 
 import org.hibernate.reactive.mutiny.Mutiny;
 
@@ -74,52 +75,47 @@ public class TrajetResource {
             params.add(minPassengers);
         }
 
-        return Panache.withTransaction(
-                () -> Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
-                        .onItem().transformToMulti(trajets -> Multi.createFrom().iterable(trajets))
-                        .onItem().transformToUniAndConcatenate(ride -> Uni.combine().all()
-                                        .unis(Mutiny.fetch(ride.driver), Mutiny.fetch(ride.car),
-                                                ride.getReservedSeats())
-                                        .withUni((driver, car, seats) -> driver.getRatings()
-                                                .onItem()
-                                                .<RideDOT>transform(ratings -> toRideDOT(ride, seats, ratings, car)))).collect().asList());
+        return Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
+                .onItem().transformToMulti(rides -> Multi.createFrom().iterable(rides))
+                .onItem().transformToUniAndConcatenate(ride -> ride.getReservedSeats().chain(
+                        seats -> Mutiny.fetch(ride.car).chain(car -> ride.driver.getRatings().onItem()
+                                .transform((ratings) -> toRideDOT(ride, seats, ratings, car)))))
+                .collect().asList();
     }
 
     @GET
     @Path("/me")
     public Uni<List<MyRideDOT>> get() {
         return Panache.withTransaction(() -> Profile.<Profile>findById(userInfo.getPreferredUserName())
-                .onItem()
-                .transformToUni(profile -> Uni.combine().all()
-                        .unis(Mutiny.fetch(profile.rides), Mutiny.fetch(profile.passengerInRides))
-                        .withUni((rides, passengerInRides) -> {
-                            var multiRide = Multi.createFrom().iterable(rides)
-                                    .onItem().transformToUni(ride -> Uni.combine()
-                                            .all()
-                                            .unis(Mutiny.fetch(ride.driver), ride.getReservedSeats())
-                                            .withUni((driver, seats) -> driver.getRatings().onItem()
-                                                    .transform(ratings -> toMyRideDOT(ride, ratings, seats, true))))
-                                    .concatenate();
-                            var multiPassengerRide = Multi.createFrom().iterable(passengerInRides)
-                                    .onItem().transformToUni(ride -> Uni.combine()
-                                            .all()
-                                            .unis(Mutiny.fetch(ride.driver), ride.getReservedSeats())
-                                            .withUni((driver, seats) -> driver.getRatings().onItem()
-                                                    .transform(ratings -> toMyRideDOT(ride, ratings, seats, false))))
-                                    .concatenate();
+                .chain(profile -> {
+                    var ridesDOTUni = Mutiny.fetch(profile.rides).onItem()
+                            .transformToMulti(rides -> Multi.createFrom().iterable(rides))
+                            .onItem().transformToUniAndConcatenate(
+                                    ride -> Mutiny.fetch(ride.driver).chain(driver -> driver.getRatings())
+                                            .chain(ratings -> ride.getReservedSeats().onItem()
+                                                    .transform(seats -> toMyRideDOT(ride, ratings, seats, true))))
+                            .collect().asList();
 
-                            return Multi.createBy().merging().streams(multiRide, multiPassengerRide).collect()
-                                    .asList();
-                        })));
+                    return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides).onItem()
+                            .transformToMulti(rides -> Multi.createFrom().iterable(rides))
+                            .onItem().transformToUniAndConcatenate(
+                                    ride -> Mutiny.fetch(ride.driver).chain(driver -> driver.getRatings())
+                                            .chain(ratings -> ride.getReservedSeats().onItem()
+                                                    .transform(seats -> toMyRideDOT(ride, ratings, seats, false))))
+                            .collect().asList()
+                            .onItem().transform(passengerInRidesDOT -> Stream
+                                    .concat(ridesDOT.stream(), passengerInRidesDOT.stream()).toList()));
+
+                }));
     }
 
     @GET
     @Path("{id}")
     public Uni<RideDOT> getSingle(Long id) {
         return Trajet.<Trajet>findById(id)
-                .chain(trajet -> trajet.getReservedSeats()
-                        .chain(seats -> trajet.driver.getRatings().chain(ratings -> Mutiny.fetch(trajet.car)
-                                .onItem().transform(car -> toRideDOT(trajet, seats, ratings, car)))));
+                .chain(ride -> ride.driver.getRatings()
+                        .chain(ratings -> ride.getReservedSeats().chain(seats -> Mutiny.fetch(ride.car).onItem()
+                                .transform(car -> toRideDOT(ride, seats, ratings, car)))));
     }
 
     @PUT
@@ -128,9 +124,9 @@ public class TrajetResource {
     public Uni<Response> bookRide(Long id) {
         String cip = userInfo.getPreferredUserName();
 
-        return Panache.withTransaction(
-                () -> Uni.combine().all().unis(Profile.<Profile>findById(cip), Trajet.<Trajet>findById(id))
-                        .withUni((user, trajet) -> {
+        return Panache.withTransaction(() -> Profile.<Profile>findById(cip)
+                .chain(user -> Trajet.<Trajet>findById(id)
+                        .chain(trajet -> {
                             if (trajet.driver == user)
                                 return Uni.createFrom().nullItem();
 
@@ -141,9 +137,9 @@ public class TrajetResource {
                                 passengers.add(user);
                                 return trajet.<Trajet>persist();
                             });
-                        })
-                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
-                        .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
+                        }))
+                .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
+                .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
     }
 
     @POST

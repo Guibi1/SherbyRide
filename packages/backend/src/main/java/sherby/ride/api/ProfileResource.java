@@ -118,17 +118,13 @@ public class ProfileResource {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        return Panache.withTransaction(() -> {
-            var evaluatedUni = Profile.<Profile>findById(json.evaluated);
-            var evaluatorUni = Profile.<Profile>findById(json.evaluator);
-            var trajetUni = Trajet.<Trajet>findById(json.trajet);
-
-            return Uni.combine().all().unis(evaluatedUni, evaluatorUni, trajetUni)
-                    .withUni((evaluated, evaluator, trajet) -> new Rating(evaluator, evaluated, trajet, json.note)
-                            .<Rating>persist())
-                    .onItem().ifNotNull().transform(rating -> Response.ok(rating).status(CREATED).build())
-                    .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build);
-        });
+        return Panache.withTransaction(() -> Trajet.<Trajet>findById(json.trajet)
+                .chain(trajet -> Profile.<Profile>findById(json.evaluator)
+                        .chain(evaluator -> Profile.<Profile>findById(json.evaluated)
+                                .chain(evaluated -> new Rating(evaluator, evaluated, trajet, json.note)
+                                        .<Rating>persist())))
+                .onItem().ifNotNull().transform(rating -> Response.ok(rating).status(CREATED).build())
+                .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
     }
 
     private record CurrentProfileDOT(Profile profile, ProfileRatings ratings) {
