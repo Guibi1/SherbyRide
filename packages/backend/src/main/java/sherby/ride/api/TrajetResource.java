@@ -34,7 +34,9 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import sherby.ride.db.Car;
+import sherby.ride.db.PassengerState;
 import sherby.ride.db.Profile;
+import sherby.ride.db.RidePassenger;
 import sherby.ride.db.Profile.ProfileRatings;
 import sherby.ride.db.Trajet;
 
