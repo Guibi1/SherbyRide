@@ -91,7 +91,7 @@ public class TrajetResource {
                     var ridesDOTUni = Mutiny.fetch(profile.rides).onItem()
                             .transformToMulti(rides -> Multi.createFrom().iterable(rides))
                             .onItem().transformToUniAndConcatenate(
-                                    ride -> Mutiny.fetch(ride.driver).chain(driver -> driver.getRatings())
+                                    ride -> ride.driver.getRatings()
                                             .chain(ratings -> ride.getReservedSeats().onItem()
                                                     .transform(seats -> toMyRideDOT(ride, ratings, seats, true))))
                             .collect().asList();
@@ -99,7 +99,7 @@ public class TrajetResource {
                     return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides).onItem()
                             .transformToMulti(rides -> Multi.createFrom().iterable(rides))
                             .onItem().transformToUniAndConcatenate(
-                                    ride -> Mutiny.fetch(ride.driver).chain(driver -> driver.getRatings())
+                                    ride -> ride.driver.getRatings()
                                             .chain(ratings -> ride.getReservedSeats().onItem()
                                                     .transform(seats -> toMyRideDOT(ride, ratings, seats, false))))
                             .collect().asList()

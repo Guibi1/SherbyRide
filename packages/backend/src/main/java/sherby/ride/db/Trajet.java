@@ -35,7 +35,7 @@ public class Trajet extends PanacheEntity {
     public int maxPassengers;
 
     @JsonIgnore
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     public Profile driver;
 
     @JsonIgnore
