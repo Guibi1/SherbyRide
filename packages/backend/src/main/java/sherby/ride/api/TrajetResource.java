@@ -37,14 +37,13 @@ import sherby.ride.db.Car;
 import sherby.ride.db.PassengerState;
 import sherby.ride.db.Profile;
 import sherby.ride.db.RidePassenger;
-import sherby.ride.db.Profile.ProfileRatings;
 import sherby.ride.db.Trajet;
+import sherby.ride.db.Profile.ProfileRatings;
 
 @Path("/trajet")
 @ApplicationScoped
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-
 public class TrajetResource {
     @Inject
     private UserInfo userInfo;
@@ -113,7 +112,7 @@ public class TrajetResource {
                     return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides)
                             .onItem()
                             .transformToMulti(rides -> Multi.createFrom().iterable(rides))
-                            .onItem().transformToUniAndConcatenate(
+                            .onItem().transformToUniAndConcatenate(rp -> Mutiny.fetch(rp.ride).chain(
                                     ride -> ride.driver.getRatings()
                                             .chain(ratings -> ride
                                                     .getReservedSeats()
@@ -122,7 +121,7 @@ public class TrajetResource {
                                                             ride,
                                                             ratings,
                                                             seats,
-                                                            false))))
+                                                            false)))))
                             .collect().asList()
                             .onItem().transform(passengerInRidesDOT -> Stream
                                     .concat(ridesDOT.stream(),
@@ -157,11 +156,13 @@ public class TrajetResource {
 
                             return Mutiny.fetch(trajet.passengers).onItem()
                                     .transformToUni(passengers -> {
-                                        if (passengers.contains(user))
-                                            return Uni.createFrom()
-                                                    .nullItem();
+                                        if (trajet.passengers.stream().anyMatch(rp -> rp.getPassenger().equals(user))) {
+                                            return Uni.createFrom().nullItem();
+                                        }
 
-                                        passengers.add(user);
+                                        RidePassenger ridePassenger = new RidePassenger(trajet, user,
+                                                PassengerState.PENDING);
+                                        passengers.add(ridePassenger);
                                         return trajet.<Trajet>persist();
                                     });
                         }))
@@ -200,7 +201,7 @@ public class TrajetResource {
                                         json.arrivalLoc,
                                         json.departureTime,
                                         json.maxPassengers,
-                                        List.<Profile>of(), driver, car)
+                                        List.<RidePassenger>of(), driver, car)
                                         .<Trajet>persist()))
                         .onItem().ifNotNull()
                         .transform(trajet -> Response.ok(trajet).status(CREATED).build())

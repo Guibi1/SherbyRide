@@ -5,7 +5,6 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Entity;
 
 @Entity
@@ -15,7 +14,7 @@ public class RidePassenger extends PanacheEntity {
     @ManyToOne
     public Trajet ride;
 
-    @OneToMany
+    @ManyToOne
     public Profile passenger;
 
     @Column
@@ -30,4 +29,7 @@ public class RidePassenger extends PanacheEntity {
         this.state = state;
     }
 
+    public Profile getPassenger() {
+        return passenger;
+    }
 }
