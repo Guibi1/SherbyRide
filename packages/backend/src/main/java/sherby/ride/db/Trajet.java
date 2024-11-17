@@ -44,7 +44,7 @@ public class Trajet extends PanacheEntity {
 
     @JsonIgnore
     @ManyToMany(mappedBy = "cip", cascade = CascadeType.ALL)
-    public List<Profile> passengers;
+    public List<RidePassenger> passengers;
 
     @JsonIgnore
     public Uni<Integer> getReservedSeats() {
@@ -56,7 +56,7 @@ public class Trajet extends PanacheEntity {
     }
 
     public Trajet(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,
-            List<Profile> passengers,
+            List<RidePassenger> passengers,
             Profile driver, Car car) {
         this.departureLoc = departureLoc;
         this.arrivalLoc = arrivalLoc;
@@ -77,5 +77,9 @@ public class Trajet extends PanacheEntity {
 
     public Uni<List<Trajet>> findBydepartureTime(String departureTime) {
         return list("departureTime", departureTime);
+    }
+
+    public List<RidePassenger> getPassengers() {
+        return passengers;
     }
 }

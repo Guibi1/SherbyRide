@@ -42,7 +42,7 @@ public class Profile extends PanacheEntityBase {
 
     @JsonIgnore
     @ManyToMany(mappedBy = "passengers", cascade = CascadeType.ALL)
-    public List<Trajet> passengerInRides;
+    public List<RidePassenger> passengerInRides;
 
     @JsonIgnore
     @OneToMany(mappedBy = "evaluated", cascade = CascadeType.ALL, orphanRemoval = true)
