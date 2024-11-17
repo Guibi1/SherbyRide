@@ -21,10 +21,12 @@ import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
@@ -78,8 +80,10 @@ public class TrajetResource {
         return Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
                 .onItem().transformToMulti(rides -> Multi.createFrom().iterable(rides))
                 .onItem().transformToUniAndConcatenate(ride -> ride.getReservedSeats().chain(
-                        seats -> Mutiny.fetch(ride.car).chain(car -> ride.driver.getRatings().onItem()
-                                .transform((ratings) -> toRideDOT(ride, seats, ratings, car)))))
+                        seats -> Mutiny.fetch(ride.car)
+                                .chain(car -> ride.driver.getRatings().onItem()
+                                        .transform((ratings) -> toRideDOT(ride,
+                                                seats, ratings, car)))))
                 .collect().asList();
     }
 
@@ -92,19 +96,34 @@ public class TrajetResource {
                             .transformToMulti(rides -> Multi.createFrom().iterable(rides))
                             .onItem().transformToUniAndConcatenate(
                                     ride -> ride.driver.getRatings()
-                                            .chain(ratings -> ride.getReservedSeats().onItem()
-                                                    .transform(seats -> toMyRideDOT(ride, ratings, seats, true))))
+                                            .chain(ratings -> ride
+                                                    .getReservedSeats()
+                                                    .onItem()
+                                                    .transform(seats -> toMyRideDOT(
+                                                            ride,
+                                                            ratings,
+                                                            seats,
+                                                            true))))
                             .collect().asList();
 
-                    return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides).onItem()
+                    return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides)
+                            .onItem()
                             .transformToMulti(rides -> Multi.createFrom().iterable(rides))
                             .onItem().transformToUniAndConcatenate(
                                     ride -> ride.driver.getRatings()
-                                            .chain(ratings -> ride.getReservedSeats().onItem()
-                                                    .transform(seats -> toMyRideDOT(ride, ratings, seats, false))))
+                                            .chain(ratings -> ride
+                                                    .getReservedSeats()
+                                                    .onItem()
+                                                    .transform(seats -> toMyRideDOT(
+                                                            ride,
+                                                            ratings,
+                                                            seats,
+                                                            false))))
                             .collect().asList()
                             .onItem().transform(passengerInRidesDOT -> Stream
-                                    .concat(ridesDOT.stream(), passengerInRidesDOT.stream()).toList()));
+                                    .concat(ridesDOT.stream(),
+                                            passengerInRidesDOT.stream())
+                                    .toList()));
 
                 }));
     }
@@ -114,8 +133,10 @@ public class TrajetResource {
     public Uni<RideDOT> getSingle(Long id) {
         return Trajet.<Trajet>findById(id)
                 .chain(ride -> ride.driver.getRatings()
-                        .chain(ratings -> ride.getReservedSeats().chain(seats -> Mutiny.fetch(ride.car).onItem()
-                                .transform(car -> toRideDOT(ride, seats, ratings, car)))));
+                        .chain(ratings -> ride.getReservedSeats()
+                                .chain(seats -> Mutiny.fetch(ride.car).onItem()
+                                        .transform(car -> toRideDOT(ride, seats,
+                                                ratings, car)))));
     }
 
     @PUT
@@ -130,13 +151,15 @@ public class TrajetResource {
                             if (trajet.driver == user)
                                 return Uni.createFrom().nullItem();
 
-                            return Mutiny.fetch(trajet.passengers).onItem().transformToUni(passengers -> {
-                                if (passengers.contains(user))
-                                    return Uni.createFrom().nullItem();
+                            return Mutiny.fetch(trajet.passengers).onItem()
+                                    .transformToUni(passengers -> {
+                                        if (passengers.contains(user))
+                                            return Uni.createFrom()
+                                                    .nullItem();
 
-                                passengers.add(user);
-                                return trajet.<Trajet>persist();
-                            });
+                                        passengers.add(user);
+                                        return trajet.<Trajet>persist();
+                                    });
                         }))
                 .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build())
                 .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
@@ -168,14 +191,46 @@ public class TrajetResource {
 
         return Panache.withTransaction(
                 () -> Profile.<Profile>findById(json.driver)
-                        .chain(driver -> Car.<Car>findById(json.licencePlate).chain(car -> {
-                            var trajet = new Trajet(json.departureLoc, json.arrivalLoc, json.departureTime,
-                                    json.maxPassengers,
-                                    List.<Profile>of(), driver, car);
-                            return trajet.<Trajet>persist();
-                        }))
-                        .onItem().ifNotNull().transform(trajet -> Response.ok(trajet).status(CREATED).build()))
-                .onItem().ifNull().continueWith(Response.ok().status(BAD_REQUEST)::build);
+                        .chain(driver -> Car.<Car>findById(json.licencePlate)
+                                .chain(car -> new Trajet(json.departureLoc,
+                                        json.arrivalLoc,
+                                        json.departureTime,
+                                        json.maxPassengers,
+                                        List.<Profile>of(), driver, car)
+                                        .<Trajet>persist()))
+                        .onItem().ifNotNull()
+                        .transform(trajet -> Response.ok(trajet).status(CREATED).build())
+                        .onItem().ifNull()
+                        .continueWith(Response.ok().status(BAD_REQUEST)::build));
+    }
+
+    @DELETE
+    @Path("{id}")
+    @Authenticated
+    public Uni<Response> deleteRide(@PathParam("id") Long id) {
+        String userId = userInfo.getPreferredUserName();
+
+        return Panache.withTransaction(() -> Trajet.<Trajet>findById(id)
+                .onItem().ifNotNull().transformToUni(trajet -> {
+                    // Vérifie que l'utilisateur est bien le conducteur
+                    if (!trajet.driver.cip.equals(userId)) {
+                        return Uni.createFrom().item(Response.status(Response.Status.FORBIDDEN)
+                                .entity("Vous n'êtes pas autorisé à supprimer cette offre.")
+                                .build());
+                    }
+                    // Utilise deleteById pour obtenir un boolean indiquant le succès
+                    return Trajet.deleteById(id).onItem().transform(deleted -> {
+                        if (deleted) {
+                            return Response.noContent().build(); // 204 No Content
+                        } else {
+                            return Response.status(Response.Status.NOT_FOUND)
+                                    .entity("L'offre n'a pas pu être supprimée.")
+                                    .build();
+                        }
+                    });
+                })
+                .onItem().ifNull().continueWith(() -> Response.status(Response.Status.NOT_FOUND)
+                        .entity("L'offre n'existe pas.").build()));
     }
 
     private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car) {
@@ -199,8 +254,7 @@ public class TrajetResource {
             Date departureTime,
             int maxPassengers,
             int reservedSeats,
-            ProfileRatings ratings,
-            Car car) {
+            ProfileRatings ratings, Car car) {
     }
 
     private record MyRideDOT(
