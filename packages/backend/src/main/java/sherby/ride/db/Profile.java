@@ -13,7 +13,6 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 
 @Entity
@@ -41,7 +40,7 @@ public class Profile extends PanacheEntityBase {
     public List<Trajet> rides;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "passengers", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "passenger", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<RidePassenger> passengerInRides;
 
     @JsonIgnore

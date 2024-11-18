@@ -15,8 +15,8 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 @Entity
 @Cacheable
@@ -43,7 +43,7 @@ public class Trajet extends PanacheEntity {
     public Car car;
 
     @JsonIgnore
-    @ManyToMany(mappedBy = "cip", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "ride", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<RidePassenger> passengers;
 
     @JsonIgnore
