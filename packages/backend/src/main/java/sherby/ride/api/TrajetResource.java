@@ -220,6 +220,9 @@ public class TrajetResource {
                     if (!trajet.driver.cip.equals(userId)) {
                         return Uni.createFrom().item(Response.status(FORBIDDEN).build());
                     }
+                    if (trajet.departureTime.before(new Date())) {
+                        return Uni.createFrom().item(Response.status(FORBIDDEN).build());
+                    }
 
                     // Supprime le trajet
                     return trajet.delete().onItem().transform(deleted -> Response.ok().build());

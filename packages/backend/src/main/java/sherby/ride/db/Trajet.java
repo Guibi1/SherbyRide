@@ -47,6 +47,10 @@ public class Trajet extends PanacheEntity {
     public List<RidePassenger> passengers;
 
     @JsonIgnore
+    @OneToMany(mappedBy = "ride", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Rating> ratings;
+
+    @JsonIgnore
     public Uni<Integer> getReservedSeats() {
         return Panache
                 .withTransaction(() -> Mutiny.fetch(passengers).onItem().transform(passengers -> passengers.size()));

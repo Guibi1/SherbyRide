@@ -18,7 +18,7 @@ public class Rating extends PanacheEntity {
     public Profile evaluated;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    public Trajet trajet;
+    public Trajet ride;
 
     @Column
     public float note;
@@ -26,10 +26,10 @@ public class Rating extends PanacheEntity {
     public Rating() {
     }
 
-    public Rating(Profile evaluator, Profile evaluated, Trajet trajet, float note) {
+    public Rating(Profile evaluator, Profile evaluated, Trajet ride, float note) {
         this.evaluator = evaluator;
         this.evaluated = evaluated;
-        this.trajet = trajet;
+        this.ride = ride;
         this.note = note;
     }
 }

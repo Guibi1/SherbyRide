@@ -48,6 +48,10 @@ public class Profile extends PanacheEntityBase {
     public List<Rating> ratings;
 
     @JsonIgnore
+    @OneToMany(mappedBy = "evaluator", cascade = CascadeType.ALL, orphanRemoval = true)
+    public List<Rating> ratingsDone;
+
+    @JsonIgnore
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, orphanRemoval = true)
     public List<Car> cars;
 
