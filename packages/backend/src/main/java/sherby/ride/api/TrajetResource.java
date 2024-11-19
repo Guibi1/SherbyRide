@@ -2,6 +2,8 @@ package sherby.ride.api;
 
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static jakarta.ws.rs.core.Response.Status.CREATED;
+import static jakarta.ws.rs.core.Response.Status.FORBIDDEN;
+import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -212,25 +214,14 @@ public class TrajetResource {
 
         return Panache.withTransaction(() -> Trajet.<Trajet>findById(id)
                 .onItem().ifNotNull().transformToUni(trajet -> {
-                    // Vérifie que l'utilisateur est bien le conducteur
                     if (!trajet.driver.cip.equals(userId)) {
-                        return Uni.createFrom().item(Response.status(Response.Status.FORBIDDEN)
-                                .entity("Vous n'êtes pas autorisé à supprimer cette offre.")
-                                .build());
+                        return Uni.createFrom().item(Response.status(FORBIDDEN).build());
                     }
-                    // Utilise deleteById pour obtenir un boolean indiquant le succès
-                    return Trajet.deleteById(id).onItem().transform(deleted -> {
-                        if (deleted) {
-                            return Response.noContent().build(); // 204 No Content
-                        } else {
-                            return Response.status(Response.Status.NOT_FOUND)
-                                    .entity("L'offre n'a pas pu être supprimée.")
-                                    .build();
-                        }
-                    });
+
+                    // Supprime le trajet
+                    return trajet.delete().onItem().transform(deleted -> Response.ok().build());
                 })
-                .onItem().ifNull().continueWith(() -> Response.status(Response.Status.NOT_FOUND)
-                        .entity("L'offre n'existe pas.").build()));
+                .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
     }
 
     private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car) {

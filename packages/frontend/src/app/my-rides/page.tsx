@@ -7,8 +7,8 @@ import OffersListForm from "./OffersListForm";
 export default async function OffersListPage() {
     const session = await auth();
     if (!session) notFound();
-    const rides = await getMyRides();
 
+    const rides = await getMyRides();
     if (typeof rides === "string") {
         return (
             <main className="py-6 md:py-12 lg:py-16 xl:py-24 bg-gray-100 dark:bg-gray-800">
