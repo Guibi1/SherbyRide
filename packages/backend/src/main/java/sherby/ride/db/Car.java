@@ -47,5 +47,6 @@ public class Car extends PanacheEntityBase {
         this.year = year;
         this.color = color;
         this.owner = owner;
+        this.deleted = false;
     }
 }
