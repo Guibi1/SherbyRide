@@ -23,9 +23,8 @@ export default async function HomePage() {
                             </p>
                         </div>
 
-                        <form className="flex gap-2 w-full max-w-sm">
-                            <Input className="flex-1" placeholder="Entre ta destination" type="text" />
-
+                        <form action="/rides" method="get" className="flex gap-2 w-full max-w-sm">
+                            <Input name="to" className="flex-1" placeholder="Entre ta destination" type="text" />
                             <Button type="submit">
                                 <SearchIcon className="h-4 w-4" />
                                 <span className="sr-only">Recherche</span>
