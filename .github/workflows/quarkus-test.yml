@@ -1,12 +1,12 @@
-name: Test backend
+name: Run backend tests
 
 on:
   pull_request:
-    branches:
-      - '**' # Runs on any pull request
+      branches:
+        - '**' # Runs on any pull request
 
 jobs:
-    test:
+    test-backend:
         runs-on: ubuntu-latest
         defaults:
             run:
