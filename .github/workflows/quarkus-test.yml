@@ -1,9 +1,12 @@
 name: Run backend tests
 
 on:
-  pull_request:
-      branches:
-        - '**' # Runs on any pull request
+    push:
+        branches:
+          - main
+    pull_request:
+        branches:
+          - '**' # Runs on any pull request
 
 jobs:
     test-backend:
@@ -20,22 +23,13 @@ jobs:
             uses: actions/checkout@v3
 
             # Step 2: Set up JDK
-          - name: Set up JDK 17
+          - name: Set up JDK
             uses: actions/setup-java@v3
             with:
                 distribution: 'temurin' # Options: temurin, zulu, adopt, etc.
                 java-version: '21' # Replace with your desired Java version
                 cache: 'gradle' # Enables Gradle caching
 
-          # Step 3: Cache Gradle dependencies
-          - name: Cache Gradle dependencies
-            uses: actions/cache@v3
-            with:
-                path: ~/.gradle/caches
-                key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-                restore-keys: |
-                    gradle-${{ runner.os }}-
-
-          # Step 4: Run Gradle tasks
+          # Step 3: Run Gradle tasks
           - name: Run tests
             run: ./gradlew test --no-daemon

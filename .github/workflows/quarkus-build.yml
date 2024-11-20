@@ -19,26 +19,22 @@ jobs:
           - name: Checkout code
             uses: actions/checkout@v3
 
-          # Step 2: Set up JDK
-          - name: Set up JDK 17
+          # Step 2: Set up GraalVM
+          - name: Set up GraalVM
             uses: actions/setup-java@v3
             with:
-                distribution: 'temurin'
+                distribution: 'graalvm'
                 java-version: '21'
-                cache: 'gradle' # Enables Gradle caching
+                cache: 'gradle'
 
-          # Step 3: Cache Gradle dependencies
-          - name: Cache Gradle dependencies
-            uses: actions/cache@v3
-            with:
-                path: ~/.gradle/caches
-                key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-                restore-keys: |
-                  gradle-${{ runner.os }}-
+          # Step 3: Install Native Image tool
+          - name: Install Native Image
+            run: |
+              gu install native-image
 
           # Step 4: Build the Quarkus application
           - name: Build Quarkus application
-            run: ./gradlew build -Dquarkus.package.type=uber-jar --no-daemon
+            run: ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.package.jar.enabled=false --no-daemon
 
           # Step 5: Log in to GitHub Container Registry
           - name: Log in to GHCR
@@ -51,9 +47,9 @@ jobs:
           # Step 6: Build the container image
           - name: Build Docker image
             run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/sherby-ride-backend:latest .
+              docker build -f src/main/docker/Dockerfile.native-micro -t ghcr.io/guibi1/sherby-ride-backend:latest .
 
           # Step 7: Push the container image
           - name: Push Docker image to GHCR
             run: |
-              docker push ghcr.io/${{ github.repository_owner }}/sherby-ride-backend:latest
+              docker push ghcr.io/guibi1/sherby-ride-backend:latest
