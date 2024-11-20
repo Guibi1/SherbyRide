@@ -3,7 +3,7 @@ name: Build and Push Production Container to GHCR
 on:
     push:
         branches:
-          - main
+            - main
 
 jobs:
     build-backend:
@@ -18,49 +18,49 @@ jobs:
             id-token: write
 
         steps:
-          # Step 1: Checkout the code
-          - name: Checkout code
-            uses: actions/checkout@v3
+            # Step 1: Checkout the code
+            - name: Checkout code
+              uses: actions/checkout@v3
 
-          # Step 2: Set up GraalVM
-          - name: Set up GraalVM
-            uses: actions/setup-java@v4
-            with:
-                distribution: 'graalvm'
-                java-version: '21'
-                cache: 'gradle'
+            # Step 2: Set up GraalVM
+            - name: Set up GraalVM
+              uses: actions/setup-java@v4
+              with:
+                  distribution: "graalvm"
+                  java-version: "21"
+                  cache: "gradle"
 
-          # Step 3: Build the Quarkus application
-          - name: Build Quarkus application
-            run: ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.package.jar.enabled=false --no-daemon
+            # Step 3: Build the Quarkus application
+            - name: Build Quarkus application
+              run: ./gradlew build -Dquarkus.native.enabled=true -Dquarkus.package.jar.enabled=false --no-daemon
 
-          # Step 4: Log in to GitHub Container Registry
-          - name: Log in to GHCR
-            uses: docker/login-action@v2
-            with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
+            # Step 4: Log in to GitHub Container Registry
+            - name: Log in to GHCR
+              uses: docker/login-action@v2
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-          - name: Extract metadata (tags, labels) for Docker
-            id: meta
-            uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-            with:
-                images: ghcr.io/guibi1/sherby-ride-backend
+            - name: Extract metadata (tags, labels) for Docker
+              id: meta
+              uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+              with:
+                  images: ghcr.io/guibi1/sherby-ride-backend
 
-          - name: Build and push Docker image
-            id: push
-            uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
-            with:
-                file: src/main/docker/Dockerfile.native-micro
-                context: .
-                push: true
-                tags: ${{ steps.meta.outputs.tags }}
-                labels: ${{ steps.meta.outputs.labels }}
+            - name: Build and push Docker image
+              id: push
+              uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+              with:
+                  file: ./src/main/docker/Dockerfile.native-micro
+                  context: .
+                  push: true
+                  tags: ${{ steps.meta.outputs.tags }}
+                  labels: ${{ steps.meta.outputs.labels }}
 
-          - name: Generate artifact attestation
-            uses: actions/attest-build-provenance@v1
-            with:
-                subject-name: ghcr.io/guibi1/sherby-ride-backend
-                subject-digest: ${{ steps.push.outputs.digest }}
-                push-to-registry: true
+            - name: Generate artifact attestation
+              uses: actions/attest-build-provenance@v1
+              with:
+                  subject-name: ghcr.io/guibi1/sherby-ride-backend
+                  subject-digest: ${{ steps.push.outputs.digest }}
+                  push-to-registry: true
