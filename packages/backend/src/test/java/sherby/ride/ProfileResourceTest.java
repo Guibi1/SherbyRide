@@ -10,7 +10,7 @@ import io.smallrye.mutiny.Uni;
 import sherby.ride.db.Profile;
 
 @QuarkusTest
-class GreetingResourceTest {
+class ProfileResourceTest {
     @Test
     public void testProfil() {
         PanacheMock.mock(Profile.class);
@@ -20,9 +20,17 @@ class GreetingResourceTest {
         p.phone = "438-504-3225";
         p.faculty = "École de gestion";
 
+        // Mock behavior
         Mockito.when(Profile.findById(p.cip)).thenReturn(Uni.createFrom().item(p));
-        Assertions.assertSame(Uni.createFrom().item(p), Profile.findById(p.cip));
-        Assertions.assertNull(Profile.findById("nono1212"));
-    }
+        Mockito.when(Profile.findById("nono1212")).thenReturn(Uni.createFrom().nullItem());
 
+        // Test successful find
+        Uni<Profile> result = Profile.findById(p.cip);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(p.cip, result.await().indefinitely().cip);
+
+        // Test unsuccessful find
+        Uni<Profile> nullResult = Profile.findById("nono1212");
+        Assertions.assertNull(nullResult.await().indefinitely());
+    }
 }
