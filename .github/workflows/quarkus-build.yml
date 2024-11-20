@@ -52,7 +52,7 @@ jobs:
               id: push
               uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
               with:
-                  file: ./src/main/docker/Dockerfile.native-micro
+                  file: ./packages/backend/src/main/docker/Dockerfile.native-micro
                   context: .
                   push: true
                   tags: ${{ steps.meta.outputs.tags }}
