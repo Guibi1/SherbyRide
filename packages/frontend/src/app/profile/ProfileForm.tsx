@@ -28,7 +28,7 @@ export default function ProfileForm({ profile }: { profile: Profile & { ratings:
     const { mutate, isPending } = useMutation({
         async mutationFn(values: z.infer<typeof formSchema>) {
             const session = await getSession();
-            const res = await fetch("http://localhost:8080/profile", {
+            const res = await fetch(`${process.env.API_BASE_URL}/profile`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -12,7 +12,7 @@ export default function BookingCard({ ride, profile }: BookingCardProps) {
     const { mutate, isPending } = useMutation({
         async mutationFn() {
             const session = await getSession();
-            const res = await fetch(`http://localhost:8080/trajet/${ride}`, {
+            const res = await fetch(`${process.env.API_BASE_URL}/trajet/${ride}`, {
                 method: "PUT",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
             });

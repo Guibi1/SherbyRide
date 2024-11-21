@@ -41,7 +41,7 @@ export default function NewCarDialog({ children, ...props }: NewCarDialogProps) 
     const { mutate, isPending } = useMutation({
         async mutationFn(values: z.infer<typeof formSchema>) {
             const session = await getSession();
-            const res = await fetch("http://localhost:8080/car", {
+            const res = await fetch(`${process.env.API_BASE_URL}/car`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
                 body: JSON.stringify(values),

@@ -10,7 +10,7 @@ export async function getProfile<R extends boolean>(
     if (!session) return null;
     const token = session.accessToken;
 
-    const res = await fetch(`http://localhost:8080/profile?ratings=${ratings}`, {
+    const res = await fetch(`${process.env.API_BASE_URL}/profile?ratings=${ratings}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     });
 
@@ -42,7 +42,7 @@ export async function getRides(options?: GetRidesOptions): Promise<Ride[] | stri
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-    const res = await fetch(`http://localhost:8080/trajet?${searchParams}`, { headers });
+    const res = await fetch(`${process.env.API_BASE_URL}/trajet?${searchParams}`, { headers });
 
     if (!res.ok) {
         return res.statusText;
@@ -57,7 +57,7 @@ export async function getMyRides(): Promise<(Ride & { mine: boolean })[] | strin
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-    const res = await fetch("http://localhost:8080/trajet/me", { headers });
+    const res = await fetch(`${process.env.API_BASE_URL}/trajet/me`, { headers });
 
     if (!res.ok) {
         return res.statusText;
@@ -72,7 +72,7 @@ export async function getRide(id: string): Promise<Ride | string> {
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-    const res = await fetch(`http://localhost:8080/trajet/${id}`, { headers });
+    const res = await fetch(`${process.env.API_BASE_URL}/trajet/${id}`, { headers });
 
     if (!res.ok) {
         return res.statusText;
@@ -88,7 +88,7 @@ export async function getCars(): Promise<Car[] | string> {
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-    const res = await fetch("http://localhost:8080/car", { headers });
+    const res = await fetch(`${process.env.API_BASE_URL}/car`, { headers });
 
     if (!res.ok) {
         return res.statusText;
