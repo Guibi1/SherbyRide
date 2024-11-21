@@ -5,7 +5,7 @@ import RatingDialog from "@/components/RatingDialog";
 import RideCard from "@/components/RideCard";
 import { Button } from "@/components/ui/button";
 import { getMyRides } from "@/lib/api";
-import type { Profile, Ride } from "@/lib/types";
+import type { MyRide, Profile, Ride } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { getSession } from "next-auth/react";
@@ -13,7 +13,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import DriverNotificationButton from "./DriverNotificationButton";
 
-export default function OffersListForm(props: { rides: (Ride & { driver?: Profile })[] }) {
+export default function OffersListForm(props: { rides: MyRide[] }) {
     const { data: rides, refetch } = useQuery({
         queryKey: ["my-rides"],
         queryFn: getMyRides,
