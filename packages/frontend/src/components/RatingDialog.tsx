@@ -19,29 +19,44 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getSession } from "next-auth/react";
 import { getQueryClient } from "@/lib/query";
+import type { Profile, Ride } from "@/lib/types";
 import { toast } from "sonner";
+import { getProfile } from "@/lib/api";
 
 
 
 const formSchema = z.object({
-  name: z.string(),
-  note: z.array(z.number().min(0).max(5)),
-  submit: z.boolean()
+  evaluator: z.string(),
+  evaluated: z.string(),
+  trajet: z.string(),
+  note: z.number().min(0).max(5)
 });
 
-type NewRatingDialogProps = { open?: boolean; setOpen?: (open: boolean) => void; children?: ReactNode };
+type NewRatingDialogProps = { ride: (Ride & { driver?: Profile }); children?: ReactNode };
 
-export default function NewRatingDialog({ children, ...props }: NewRatingDialogProps) {
-  const [open, setOpen] = useState(props.open);
-  const [note, setNote] = useState(0);
-  const form = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-  });
+export default function NewRatingDialog({ children, ride }: NewRatingDialogProps) {
+  
+    const { data: user } = useQuery({
+      queryKey: ["user-profile"],
+      queryFn: () => getProfile(false),
+    });
+
+    const [open, setOpen] = useState(false);
+    const form = useForm<{ evaluator: string; evaluated: string; trajet: string; note: number }>({
+        resolver: zodResolver(formSchema),
+        defaultValues:{
+          evaluator : user?.cip || "",
+          evaluated : ride.driver?.cip,
+          trajet : ride.id.toString(),
+          note : 0
+
+        }
+    });
 
   const { mutate, isPending } = useMutation({
       async mutationFn(values: z.infer<typeof formSchema>) {
           const session = await getSession();
-          const res = await fetch("http://localhost:8080/{cip}/rating", {
+          const res = await fetch(`http://localhost:8080/profile/${ride.driver?.cip}/rating`, {
               method: "POST",
               headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
               body: JSON.stringify(values),
@@ -50,9 +65,7 @@ export default function NewRatingDialog({ children, ...props }: NewRatingDialogP
       },
       async onSuccess() {
           toast.success("Votre véhicule à été créé avec succès");
-          await getQueryClient().refetchQueries({ queryKey: ["user-cars"] });
           setOpen(false);
-          props.setOpen?.(false);
       },
       onError(error) {
           toast.error("Une erreur est survenue", { description: error.message });
@@ -73,15 +86,12 @@ export default function NewRatingDialog({ children, ...props }: NewRatingDialogP
           <form onSubmit={form.handleSubmit((v) => mutate(v))} className= "flex-1 flex flex-col gap-8">
             <FormField
               control={form.control}
-              name="name"
+              name = "evaluated"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Nom du conducteur</FormLabel>
                   <FormControl>
-                    <Input
-                      name={field.name}
-                      type="text"
-                    />
+                    <Input value={ride.driver?.name} disabled />
                   </FormControl>
                 </FormItem>
               )}
@@ -99,9 +109,9 @@ export default function NewRatingDialog({ children, ...props }: NewRatingDialogP
                       <Star
                         key={etoile}
                         className={`h-8 w-8 cursor-pointer ${
-                          etoile <= note ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                          etoile <= field.value ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
                         }`}
-                        onClick={() => setNote(etoile)}
+                        onClick={() => field.onChange(etoile)}///changer setNote
                       />
                     ))}
                   </div>

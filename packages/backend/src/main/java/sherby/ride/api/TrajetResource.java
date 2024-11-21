@@ -96,7 +96,7 @@ public class TrajetResource {
 
     @GET
     @Path("/me")
-    public Uni<List<MyRideDOT>> get() {
+    public Uni<List<MyRideDOT>> getMyRides() {
         return Panache.withTransaction(() -> Profile.<Profile>findById(userInfo.getPreferredUserName())
                 .chain(profile -> {
                     var ridesDOTUni = Mutiny.fetch(profile.rides).onItem()
@@ -110,7 +110,7 @@ public class TrajetResource {
                                                             ride,
                                                             ratings,
                                                             seats,
-                                                            true))))
+                                                            null))))
                             .collect().asList();
 
                     return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides)
@@ -126,7 +126,7 @@ public class TrajetResource {
                                                             ride,
                                                             ratings,
                                                             seats,
-                                                            false)))))
+                                                            ride.driver)))))
                             .collect().asList()
                             .onItem().transform(passengerInRidesDOT -> Stream
                                     .concat(ridesDOT.stream(),
@@ -308,12 +308,12 @@ public class TrajetResource {
                 ride.maxPassengers, reservedSeats, ratings, car, request, driver, passengers);
     }
 
-    private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, long reservedSeats, boolean mine) {
+    private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, long reservedSeats, Profile driver) {
         return new MyRideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
                 ride.maxPassengers,
                 reservedSeats,
-                ratings, mine);
+                ratings, driver);
     }
 
     private record RideDOT(
@@ -333,7 +333,7 @@ public class TrajetResource {
             Date departureTime,
             int maxPassengers,
             long reservedSeats,
-            ProfileRatings ratings, boolean mine) {
+            ProfileRatings ratings, Profile driver) {
     }
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,

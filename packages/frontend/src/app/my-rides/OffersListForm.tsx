@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import DriverNotificationButton from "./DriverNotificationButton";
 import { PlusIcon } from "lucide-react";
 
-export default function OffersListForm(props: { rides: (Ride & { mine: boolean })[] }) {
+export default function OffersListForm(props: { rides: (Ride & { driver?: Profile })[] }) {
     const { data: rides, refetch } = useQuery({
         queryKey: ["my-rides"],
         queryFn: getMyRides,
@@ -46,8 +46,8 @@ export default function OffersListForm(props: { rides: (Ride & { mine: boolean }
         );
     }
 
-    const driverRides = rides.filter((ride) => ride.mine); // Trajets où l'utilisateur est conducteur
-    const passengerRides = rides.filter((ride) => !ride.mine); // Trajets où l'utilisateur est passager
+    const driverRides = rides.filter((ride) => ride.driver); // Trajets où l'utilisateur est conducteur
+    const passengerRides = rides.filter((ride) => !ride.driver); // Trajets où l'utilisateur est passager
 
     return (
         <div className="container">
@@ -87,10 +87,11 @@ export default function OffersListForm(props: { rides: (Ride & { mine: boolean }
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
                                     </Button>
 
-                                    <RatingDialog>
-                                        <Button asChild
+                                    <RatingDialog ride={ride}>
+                                        <Button
                                             className="relative rounded-sm justify-start font-normal py-1.5 pr-2 pl-8 text-sm outline-none"
                                             variant="ghost"
+                                            
                                         >
                                             <PlusIcon size = {12} className="stroke-muted-foreground absolute left-2" />
                                             Note le conducteur

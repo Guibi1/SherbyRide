@@ -52,7 +52,7 @@ export async function getRides(options?: GetRidesOptions): Promise<Ride[] | stri
     return (json as Ride[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
 }
 
-export async function getMyRides(): Promise<(Ride & { mine: boolean })[] | string> {
+export async function getMyRides(): Promise<(Ride & { driver?: Profile })[] | string> {
     const session = isServer ? await auth() : await getSession();
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -64,7 +64,7 @@ export async function getMyRides(): Promise<(Ride & { mine: boolean })[] | strin
     }
 
     const json = await res.json();
-    return (json as (Ride & { mine: boolean })[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
+    return (json as (Ride & { driver?: Profile })[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
 }
 
 export async function getRide(id: string): Promise<Ride | string> {
