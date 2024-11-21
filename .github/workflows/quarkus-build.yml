@@ -25,7 +25,11 @@ jobs:
             - name: Install musl tools
               run: |
                 sudo apt-get update
-                sudo apt-get install -y musl-tools zlib-dev krb5-dev
+                sudo apt-get install -y musl-tools zlib1g-dev gcc build-essential libssl-dev
+
+            - name: Set library path for zlib
+              run: |
+                export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu
 
             # Step 2: Log in to GitHub Container Registry
             - name: Log in to GHCR
