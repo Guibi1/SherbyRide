@@ -20,7 +20,7 @@ export default function CarsList() {
     const { mutate, isPending } = useMutation({
         async mutationFn(car: Car) {
             const session = await getSession();
-            const res = await fetch(`${process.env.API_BASE_URL}/car/${car.licencePlate}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/car/${car.licencePlate}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
             });

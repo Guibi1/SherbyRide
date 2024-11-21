@@ -50,7 +50,7 @@ export default function TrajetCreationForm({ user }: { user: User }) {
     const { mutate, isPending } = useMutation({
         async mutationFn(values: z.infer<typeof formSchema>) {
             const session = await getSession();
-            const res = await fetch(`${process.env.API_BASE_URL}/trajet`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/trajet`, {
                 method: "POST",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
                 body: JSON.stringify({

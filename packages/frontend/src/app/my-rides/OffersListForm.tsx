@@ -20,7 +20,7 @@ export default function OffersListForm(props: { rides: (Ride & { mine: boolean }
     const { mutate, isPending } = useMutation({
         async mutationFn(id: number) {
             const session = await getSession();
-            const res = await fetch(`${process.env.API_BASE_URL}/trajet/${id}`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/trajet/${id}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${session?.accessToken}`, "Content-Type": "application/json" },
             });
