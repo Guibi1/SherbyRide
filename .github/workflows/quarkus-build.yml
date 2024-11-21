@@ -29,9 +29,25 @@ jobs:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
+                  
+            
+            # Step 3: Install glibc 2.28
+            - name: Install glibc 2.28
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y build-essential wget
+                  wget http://ftp.gnu.org/gnu/libc/glibc-2.28.tar.gz
+                  tar -xvzf glibc-2.28.tar.gz
+                  cd glibc-2.28
+                  mkdir build
+                  cd build
+                  ../configure --prefix=/opt/glibc-2.28
+                  make -j$(nproc)
+                  sudo make install
+                  sudo ln -sf /opt/glibc-2.28/lib/libc.so.6 /lib/x86_64-linux-gnu/libc.so.6
+                  sudo ldconfig
 
-
-            # Step 3: Set up JDK
+            # Step 4: Set up JDK
             - name: Set up JDK
               uses: actions/setup-java@v4
               with:
@@ -39,7 +55,7 @@ jobs:
                   java-version: '21' # Replace with your desired Java version
                   cache: 'gradle' # Enables Gradle caching
 
-            # Step 4: Build the Quarkus application
+            # Step 5: Build the Quarkus application
             - name: Build Quarkus application
               run: |
                   ./gradlew build \
