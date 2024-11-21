@@ -30,14 +30,14 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            # Step 3: Cache Gradle dependencies
-            - name: Cache Gradle dependencies
-              uses: actions/cache@v3
+
+            # Step 3: Set up JDK
+            - name: Set up JDK
+              uses: actions/setup-java@v4
               with:
-                  path: ~/.gradle/caches
-                  key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-                  restore-keys: |
-                    gradle-${{ runner.os }}-
+                  distribution: 'temurin' # Options: temurin, zulu, adopt, etc.
+                  java-version: '21' # Replace with your desired Java version
+                  cache: 'gradle' # Enables Gradle caching
 
             # Step 4: Build the Quarkus application
             - name: Build Quarkus application
