@@ -8,6 +8,8 @@ on:
 jobs:
     build-backend:
         runs-on: ubuntu-latest
+        container:
+            image: quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21
         defaults:
             run:
                 working-directory: ./packages/backend
@@ -22,21 +24,22 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v3
 
-            # Step 2: Set up GraalVM
-            - name: Set up GraalVM
-              uses: actions/setup-java@v4
-              with:
-                  distribution: "graalvm"
-                  java-version: "21"
-                  cache: "gradle"
-
-            # Step 3: Log in to GitHub Container Registry
+            # Step 2: Log in to GitHub Container Registry
             - name: Log in to GHCR
               uses: docker/login-action@v2
               with:
                   registry: ghcr.io
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
+                  
+            # Step 3: Cache Gradle dependencies
+            - name: Cache Gradle dependencies
+              uses: actions/cache@v3
+              with:
+                  path: ~/.gradle/caches
+                  key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+                  restore-keys: |
+                    gradle-${{ runner.os }}-
 
             # Step 4: Build the Quarkus application
             - name: Build Quarkus application
