@@ -1,7 +1,7 @@
 import { isServer } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import { auth } from "./auth";
-import type { Car, Profile, ProfileRatings, Ride } from "./types";
+import type { Car, Profile, ProfileRatings, Ride, RidePassenger } from "./types";
 
 export async function getProfile<R extends boolean>(
     ratings?: R,
@@ -102,7 +102,7 @@ export async function getRideRequests(ride: Ride ): Promise<Profile[] | string> 
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-    const res = await fetch(`http://localhost:8080/trajet/${ride.id}/notifications`, { headers });
+    const res = await fetch(`http://localhost:8080/trajet/${ride.id}/passengerRequest`, { headers });
 
     if (!res.ok) {
         return res.statusText;
@@ -110,4 +110,25 @@ export async function getRideRequests(ride: Ride ): Promise<Profile[] | string> 
 
     const json = await res.json();
     return json as Profile[];
+}
+
+export async function setState(ride: Ride, passenger: Profile, accepted: boolean): Promise<RidePassenger | string> {
+    const session = isServer ? await auth() : await getSession();
+
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (session) headers.Authorization = `Bearer ${session.accessToken}`;
+    const res = await fetch(`http://localhost:8080/trajet/${ride.id}/passengerRequest`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ cip: passenger.cip, accepted}),
+    });
+    
+
+    if (!res.ok) {
+        const error = await res.text();
+        throw new Error(`Erreur lors de la mise à jour de l'état : ${error}`);
+    }
+
+    const json = await res.json();
+    return json as RidePassenger;
 }
