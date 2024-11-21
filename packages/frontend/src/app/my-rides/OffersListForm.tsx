@@ -1,17 +1,17 @@
 "use client";
 
-import RatingDialog from "@/components/RatingDialog";
 import ErrorOccured from "@/components/ErrorOccured";
+import RatingDialog from "@/components/RatingDialog";
 import RideCard from "@/components/RideCard";
 import { Button } from "@/components/ui/button";
 import { getMyRides } from "@/lib/api";
-import type { Ride } from "@/lib/types";
+import type { Profile, Ride } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
 import DriverNotificationButton from "./DriverNotificationButton";
-import { PlusIcon } from "lucide-react";
 
 export default function OffersListForm(props: { rides: (Ride & { driver?: Profile })[] }) {
     const { data: rides, refetch } = useQuery({
@@ -46,8 +46,8 @@ export default function OffersListForm(props: { rides: (Ride & { driver?: Profil
         );
     }
 
-    const driverRides = rides.filter((ride) => ride.driver); // Trajets où l'utilisateur est conducteur
-    const passengerRides = rides.filter((ride) => !ride.driver); // Trajets où l'utilisateur est passager
+    const driverRides = rides.filter((ride) => !ride.driver); // Trajets où l'utilisateur est conducteur
+    const passengerRides = rides.filter((ride) => ride.driver); // Trajets où l'utilisateur est passager
 
     return (
         <div className="container">
@@ -91,9 +91,8 @@ export default function OffersListForm(props: { rides: (Ride & { driver?: Profil
                                         <Button
                                             className="relative rounded-sm justify-start font-normal py-1.5 pr-2 pl-8 text-sm outline-none"
                                             variant="ghost"
-                                            
                                         >
-                                            <PlusIcon size = {12} className="stroke-muted-foreground absolute left-2" />
+                                            <PlusIcon size={12} className="stroke-muted-foreground absolute left-2" />
                                             Note le conducteur
                                         </Button>
                                     </RatingDialog>

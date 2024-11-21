@@ -106,7 +106,7 @@ public class ProfileResource {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        if (json.trajet == null || json.trajet.isEmpty()) {
+        if (json.ride == null) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
@@ -118,7 +118,7 @@ public class ProfileResource {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        return Panache.withTransaction(() -> Trajet.<Trajet>findById(json.trajet)
+        return Panache.withTransaction(() -> Trajet.<Trajet>findById(json.ride)
                 .chain(trajet -> Profile.<Profile>findById(json.evaluator)
                         .chain(evaluator -> Profile.<Profile>findById(json.evaluated)
                                 .chain(evaluated -> new Rating(evaluator, evaluated, trajet, json.note)
@@ -130,6 +130,6 @@ public class ProfileResource {
     private record CurrentProfileDOT(Profile profile, ProfileRatings ratings) {
     }
 
-    private record CreateRatingDOT(String evaluator, String evaluated, String trajet, float note) {
+    private record CreateRatingDOT(String evaluator, String evaluated, Long ride, float note) {
     }
 }
