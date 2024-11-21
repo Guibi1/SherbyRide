@@ -116,7 +116,8 @@ public class TrajetResource {
                     return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides)
                             .onItem()
                             .transformToMulti(rides -> Multi.createFrom().iterable(rides))
-                            .onItem().transformToUniAndConcatenate(rp -> Mutiny.fetch(rp.ride).chain(
+                            .onItem()
+                            .transformToUniAndConcatenate(rp -> Mutiny.fetch(rp.ride).chain(
                                     ride -> ride.driver.getRatings()
                                             .chain(ratings -> ride
                                                     .getReservedSeats()
@@ -184,11 +185,15 @@ public class TrajetResource {
 
                             return Mutiny.fetch(trajet.passengers).onItem()
                                     .transformToUni(passengers -> {
-                                        if (trajet.passengers.stream().anyMatch(rp -> rp.getPassenger().equals(user))) {
-                                            return Uni.createFrom().nullItem();
+                                        if (trajet.passengers.stream().anyMatch(
+                                                rp -> rp.getPassenger()
+                                                        .equals(user))) {
+                                            return Uni.createFrom()
+                                                    .nullItem();
                                         }
 
-                                        RidePassenger ridePassenger = new RidePassenger(trajet, user,
+                                        RidePassenger ridePassenger = new RidePassenger(
+                                                trajet, user,
                                                 PassengerState.PENDING);
                                         passengers.add(ridePassenger);
                                         return trajet.<Trajet>persist();
@@ -256,6 +261,16 @@ public class TrajetResource {
                     return trajet.delete().onItem().transform(deleted -> Response.ok().build());
                 })
                 .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
+    }
+
+    @GET
+    @Path("{id}/notifications")
+    @Authenticated
+    public Uni<List<Profile>> getPendingPassengers(@PathParam("id") Long rideId) {
+        return RidePassenger.<RidePassenger>list("ride.id = ?1 and state = ?2", rideId, PassengerState.PENDING)
+                .onItem().transformToMulti(rides -> Multi.createFrom().iterable(rides))
+                .onItem().transform(rp -> rp.getPassenger())
+                .collect().asList();
     }
 
     private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car,

@@ -9,6 +9,7 @@ import { useMutation, usePrefetchQuery, useQuery } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
+import DriverNotificationButton from "./DriverNotificationButton";
 
 export default function OffersListForm(props: { rides: (Ride & { mine: boolean })[] }) {
     const { data: rides, refetch } = useQuery({
@@ -57,6 +58,7 @@ export default function OffersListForm(props: { rides: (Ride & { mine: boolean }
                         {driverRides.map((ride) => (
                             <RideCard ride={ride} key={ride.id}>
                                 <div className="flex justify-end gap-2">
+                                    <DriverNotificationButton ride={ride}/>
                                     <Button asChild>
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
                                     </Button>

@@ -11,6 +11,13 @@ export type ProfileRatings = {
     count: number;
 };
 
+export type RidePassenger = {
+    id: number;
+    ride: Ride;
+    passenger: Profile;    
+    state: "PENDING" | "REFUSED" | "ACCEPTED";
+}
+
 type BaseRide = {
     id: number;
     departureLoc: string;
@@ -21,7 +28,7 @@ type BaseRide = {
     ratings: ProfileRatings;
 };
 export type Ride =
-    | (BaseRide & { request?: "MINE"; car: Car; passengers: { passenger: Profile, state: "PENDING" | "REFUSED" | "ACCEPTED" }[] })
+    | (BaseRide & { request?: "MINE"; car: Car; passengers: RidePassenger[] })
     | (BaseRide & { request?: "PENDING" | "REFUSED" })
     | (BaseRide & { request: "ACCEPTED"; car: Car; driver: Profile });
 
