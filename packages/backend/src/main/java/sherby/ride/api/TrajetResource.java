@@ -264,7 +264,7 @@ public class TrajetResource {
     }
 
     @GET
-    @Path("{id}/notifications")
+    @Path("{id}/passengerRequest")
     @Authenticated
     public Uni<List<Profile>> getPendingPassengers(@PathParam("id") Long rideId) {
         return RidePassenger.<RidePassenger>list("ride.id = ?1 and state = ?2", rideId, PassengerState.PENDING)
@@ -273,8 +273,24 @@ public class TrajetResource {
                 .collect().asList();
     }
 
+    @POST
+    @Path("{id}/passengerRequest")
+    @Authenticated
+    public Uni<Response> postPendingPassengers(@PathParam("id") Long rideId, PostPassengerRequestDOT json) {
+        var state = json.accepted ? PassengerState.ACCEPTED : PassengerState.REFUSED;
+
+        return Panache.withTransaction(() -> RidePassenger
+                .<RidePassenger>find("ride.id = ?1 and state = ?2 and passenger.cip = ?3", rideId,
+                        PassengerState.PENDING, json.cip)
+                .firstResult()
+                .onItem().ifNotNull()
+                .invoke(entity -> entity.state = (state))
+                .onItem().ifNotNull().transform(entity -> Response.ok(entity).build())
+                .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
+    }
+
     private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car,
-            String request, Profile driver, List<RidePassenger> passengers) {
+                String request, Profile driver, List<RidePassenger> passengers) {
         return new RideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
                 ride.maxPassengers, reservedSeats, ratings, car, request, driver, passengers);
@@ -310,5 +326,8 @@ public class TrajetResource {
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,
             String driver, String licencePlate) {
+    }
+
+    private record PostPassengerRequestDOT(String cip, boolean accepted) {
     }
 }
