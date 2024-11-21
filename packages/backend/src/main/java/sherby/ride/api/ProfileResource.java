@@ -118,13 +118,16 @@ public class ProfileResource {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
         }
 
-        return Panache.withTransaction(() -> Trajet.<Trajet>findById(json.ride)
-                .chain(trajet -> Profile.<Profile>findById(json.evaluator)
-                        .chain(evaluator -> Profile.<Profile>findById(json.evaluated)
-                                .chain(evaluated -> new Rating(evaluator, evaluated, trajet, json.note)
-                                        .<Rating>persist())))
-                .onItem().ifNotNull().transform(rating -> Response.ok(rating).status(CREATED).build())
-                .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
+        return Panache.withTransaction(() -> Rating.<Rating>list(
+                "evaluator.id = ?1 AND evaluated.id = ?2 AND ride = ?3", json.evaluator, json.evaluated, json.ride)
+                .onItem().ifNotNull().transform(() -> Response.status(BAD_REQUEST).build())
+                .onItem().ifNull().switchTo(() ->Trajet.<Trajet>findById(json.ride)
+                                .chain(trajet -> Profile.<Profile>findById(json.evaluator)
+                                        .chain(evaluator -> Profile.<Profile>findById(json.evaluated)
+                                                .chain(evaluated -> new Rating(evaluator, evaluated, trajet, json.note)
+                                                        .<Rating>persist())))
+                                .onItem().ifNotNull().transform(rating -> Response.ok(rating).status(CREATED).build())
+                                .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build)));
     }
 
     private record CurrentProfileDOT(Profile profile, ProfileRatings ratings) {

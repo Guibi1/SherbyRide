@@ -44,7 +44,7 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
         resolver: zodResolver(formSchema),
         defaultValues: {
             evaluator: user?.cip || "",
-            evaluated: ride.driver?.cip,
+            evaluated: ride.driver?.cip || " ",
             ride: ride.id,
             note: 0,
         },
@@ -69,7 +69,10 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
         },
     });
 
-    return (
+    const now = new Date();
+    if(ride.departureTime >= now)
+    {
+      return (
         <Dialog open={open} onOpenChange={(s) => setOpen(s)}>
             {children && <DialogTrigger asChild>{children}</DialogTrigger>}
 
@@ -81,19 +84,11 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit((v) => mutate(v))} className="flex-1 flex flex-col gap-8">
-                        <FormField
-                            control={form.control}
-                            name="evaluated"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Nom du conducteur</FormLabel>
-                                    <FormControl>
-                                        <Input value={ride.driver?.name} disabled />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
+                          <FormItem>
+                              <FormLabel>Nom du conducteur</FormLabel>
+                                  <Input value={ride.driver?.name} disabled />
+                          </FormItem>
+                          
                         {/* Note */}
                         <FormField
                             control={form.control}
@@ -130,4 +125,6 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
             </DialogContent>
         </Dialog>
     );
+    }
+    
 }
