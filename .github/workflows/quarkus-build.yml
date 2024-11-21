@@ -38,14 +38,7 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            # Step 4: Extract metadata from repo
-            - name: Extract metadata (tags, labels) for Docker
-              id: meta
-              uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
-              with:
-                  images: ghcr.io/guibi1/sherby-ride-backend
-
-            # Step 5: Build the Quarkus application
+            # Step 4: Build the Quarkus application
             - name: Build Quarkus application
               run: |
                   ./gradlew build \
@@ -55,5 +48,5 @@ jobs:
                   -Dquarkus.container-image.push=true \
                   -Dquarkus.container-image.registry=ghcr.io \
                   -Dquarkus.container-image.name=guibi1/sherby-ride-backend \
-                  -Dquarkus.container-image.additional-tags=${{ steps.meta.outputs.tags }} \
+                  -Dquarkus.container-image.tag=main \
                   --no-daemon
