@@ -1,5 +1,6 @@
 "use client";
 
+import RatingDialog from "@/components/RatingDialog";
 import ErrorOccured from "@/components/ErrorOccured";
 import RideCard from "@/components/RideCard";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
 import DriverNotificationButton from "./DriverNotificationButton";
+import { PlusIcon } from "lucide-react";
 
 export default function OffersListForm(props: { rides: (Ride & { mine: boolean })[] }) {
     const { data: rides, refetch } = useQuery({
@@ -84,6 +86,16 @@ export default function OffersListForm(props: { rides: (Ride & { mine: boolean }
                                     <Button asChild>
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
                                     </Button>
+
+                                    <RatingDialog>
+                                        <Button asChild
+                                            className="relative rounded-sm justify-start font-normal py-1.5 pr-2 pl-8 text-sm outline-none"
+                                            variant="ghost"
+                                        >
+                                            <PlusIcon size = {12} className="stroke-muted-foreground absolute left-2" />
+                                            Note le conducteur
+                                        </Button>
+                                    </RatingDialog>
                                 </div>
                             </RideCard>
                         ))}
