@@ -47,6 +47,7 @@ jobs:
                   -Dquarkus.container-image.build=true \
                   -Dquarkus.container-image.push=true \
                   -Dquarkus.container-image.registry=ghcr.io \
-                  -Dquarkus.container-image.name=guibi1/sherby-ride-backend \
+                  -Dquarkus.container-image.name=sherby-ride-backend \
                   -Dquarkus.container-image.tag=main \
+                  -Dquarkus.container-image.username=guibi1 \
                   --no-daemon
