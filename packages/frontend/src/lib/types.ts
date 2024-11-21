@@ -32,6 +32,11 @@ export type Ride =
     | (BaseRide & { request: "MINE"; car: Car; passengers: RidePassenger[] })
     | (BaseRide & { request: "ACCEPTED"; car: Car; driver: Profile });
 
+export type MyRide = Ride & {
+    driver?: Profile;
+    rated: boolean;
+}
+
 
 export type Car = {
     licencePlate: string;

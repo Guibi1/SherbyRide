@@ -13,7 +13,7 @@ import {
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { getProfile } from "@/lib/api";
-import type { Profile, Ride } from "@/lib/types";
+import type { MyRide, Profile, Ride } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
@@ -30,7 +30,7 @@ const formSchema = z.object({
     note: z.number().min(0).max(5),
 });
 
-type NewRatingDialogProps = { ride: Ride & { driver?: Profile }; children?: ReactNode };
+type NewRatingDialogProps = { ride: MyRide; children?: ReactNode };
 
 export default function NewRatingDialog({ children, ride }: NewRatingDialogProps) {
     console.log(ride);
@@ -70,7 +70,7 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
     });
 
     const now = useMemo(() => new Date(), []);
-    if (ride.departureTime >= now) return null;
+    if (ride.rated || ride.departureTime >= now) return null;
 
     return (
         <Dialog open={open} onOpenChange={(s) => setOpen(s)}>

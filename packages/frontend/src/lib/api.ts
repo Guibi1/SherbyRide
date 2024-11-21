@@ -1,7 +1,7 @@
 import { isServer } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import { auth } from "./auth";
-import type { Car, Profile, ProfileRatings, Ride, RidePassenger } from "./types";
+import type { Car, MyRide, Profile, ProfileRatings, Ride, RidePassenger } from "./types";
 
 export async function getProfile<R extends boolean>(
     ratings?: R,
@@ -52,7 +52,7 @@ export async function getRides(options?: GetRidesOptions): Promise<Ride[] | stri
     return (json as Ride[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
 }
 
-export async function getMyRides(): Promise<(Ride & { driver?: Profile })[] | string> {
+export async function getMyRides(): Promise<MyRide[] | string> {
     const session = isServer ? await auth() : await getSession();
 
     const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -64,7 +64,7 @@ export async function getMyRides(): Promise<(Ride & { driver?: Profile })[] | st
     }
 
     const json = await res.json();
-    return (json as (Ride & { driver?: Profile })[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
+    return (json as MyRide[]).map((t) => ({ ...t, departureTime: new Date(t.departureTime) }));
 }
 
 export async function getRide(id: string): Promise<Ride | string> {
