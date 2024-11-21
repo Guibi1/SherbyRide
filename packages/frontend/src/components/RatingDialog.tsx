@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { getProfile } from "@/lib/api";
 import type { Profile, Ride } from "@/lib/types";
@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import { getSession } from "next-auth/react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -69,10 +69,10 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
         },
     });
 
-    const now = new Date();
-    if(ride.departureTime >= now)
-    {
-      return (
+    const now = useMemo(() => new Date(), []);
+    if (ride.departureTime >= now) return null;
+
+    return (
         <Dialog open={open} onOpenChange={(s) => setOpen(s)}>
             {children && <DialogTrigger asChild>{children}</DialogTrigger>}
 
@@ -84,11 +84,11 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
 
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit((v) => mutate(v))} className="flex-1 flex flex-col gap-8">
-                          <FormItem>
-                              <FormLabel>Nom du conducteur</FormLabel>
-                                  <Input value={ride.driver?.name} disabled />
-                          </FormItem>
-                          
+                        <FormItem>
+                            <FormLabel>Nom du conducteur</FormLabel>
+                            <Input value={ride.driver?.name} disabled />
+                        </FormItem>
+
                         {/* Note */}
                         <FormField
                             control={form.control}
@@ -125,6 +125,4 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
             </DialogContent>
         </Dialog>
     );
-    }
-    
 }
