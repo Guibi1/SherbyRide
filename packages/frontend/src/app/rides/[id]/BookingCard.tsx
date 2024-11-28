@@ -47,9 +47,7 @@ export default function BookingCard({ profile, ...props }: BookingCardProps) {
 
                 <CardContent className="flex flex-col gap-2 items-center">
                     <p>Un compte est nécessaire pour réserver une place</p>
-                    <Button onClick={() => signIn("keycloak", { redirectTo: `/rides/${ride.id}` })}>
-                        Se connecter
-                    </Button>
+                    <Button onClick={() => signIn("keycloak", { redirectTo: "/create-profile" })}>Se connecter</Button>
                 </CardContent>
             </Card>
         );
