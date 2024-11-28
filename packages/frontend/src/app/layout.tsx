@@ -27,12 +27,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 
     return (
         <html lang="en">
+            <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0" />
+
             <QueryProvider>
                 <HydrationBoundary state={dehydrate(queryClient)}>
-                    <body className={`${inter.className} antialiased flex flex-col min-h-screen`}>
+                    <body className={`${inter.className} antialiased flex flex-col h-screen`}>
                         <NavBar />
 
-                        <div className="flex-1 grid">{children}</div>
+                        <div className="flex-1 grid overflow-y-auto">{children}</div>
 
                         <Footer />
                         <Toaster richColors />

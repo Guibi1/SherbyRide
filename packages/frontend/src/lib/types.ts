@@ -11,7 +11,7 @@ export type ProfileRatings = {
     count: number;
 };
 
-export type Ride = {
+type BaseRide = {
     id: number;
     departureLoc: string;
     arrivalLoc: string;
@@ -19,8 +19,10 @@ export type Ride = {
     maxPassengers: number;
     reservedSeats: number;
     ratings: ProfileRatings;
-    car: Car;
 };
+export type Ride =
+    | (BaseRide & { request?: "PENDING" | "REFUSED" })
+    | (BaseRide & { request: "ACCEPTED"; car: Car; driver: Profile });
 
 export type Car = {
     licencePlate: string;

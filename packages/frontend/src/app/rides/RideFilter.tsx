@@ -28,7 +28,7 @@ export default function RideFilter({ initial }: { initial: GetRidesOptions }) {
         defaultValues: {
             from: initial.from ?? "",
             to: initial.to ?? "",
-            passengers: +(initial.passengers ?? 0),
+            passengers: +(initial.passengers ?? 1),
         },
     });
 
@@ -57,7 +57,7 @@ export default function RideFilter({ initial }: { initial: GetRidesOptions }) {
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-4">
+            <form onSubmit={form.handleSubmit(submit)} className="flex flex-col gap-4 md:w-80">
                 <FormField
                     control={form.control}
                     name="from"

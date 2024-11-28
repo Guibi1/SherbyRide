@@ -36,9 +36,9 @@ import jakarta.ws.rs.core.Response;
 import sherby.ride.db.Car;
 import sherby.ride.db.PassengerState;
 import sherby.ride.db.Profile;
+import sherby.ride.db.Profile.ProfileRatings;
 import sherby.ride.db.RidePassenger;
 import sherby.ride.db.Trajet;
-import sherby.ride.db.Profile.ProfileRatings;
 
 @Path("/trajet")
 @ApplicationScoped
@@ -49,7 +49,7 @@ public class TrajetResource {
     private UserInfo userInfo;
 
     @GET
-    public Uni<List<RideDOT>> get(@QueryParam(value = "mine") Boolean myRides,
+    public Uni<List<RideDOT>> get(
             @QueryParam(value = "from") String departure,
             @QueryParam(value = "to") String arrival,
             @QueryParam(value = "date") Instant date,
@@ -57,10 +57,13 @@ public class TrajetResource {
         List<Object> params = new ArrayList<>(5);
         StringJoiner queryBuilder = new StringJoiner(" AND ");
         if (userInfo.getPreferredUserName() != null) {
-            if (myRides != null && myRides)
-                queryBuilder.add("driver.id = ?" + (params.size() + 1));
-            else
-                queryBuilder.add("driver.id != ?" + (params.size() + 1));
+            queryBuilder.add("driver.id != ?" + (params.size() + 1));
+            params.add(userInfo.getPreferredUserName());
+
+            queryBuilder.add("NOT EXISTS (" +
+                    "SELECT 1 FROM RidePassenger rp WHERE rp MEMBER OF passengers AND rp.passenger.id = ?"
+                    + (params.size() + 1) +
+                    ")");
             params.add(userInfo.getPreferredUserName());
         }
         if (departure != null && !departure.isEmpty()) {
@@ -75,18 +78,16 @@ public class TrajetResource {
             queryBuilder.add("departureTime = ?" + (params.size() + 1));
             params.add(Date.from(date));
         }
-        if (minPassengers != null) {
-            queryBuilder.add("maxPassengers >= ?" + (params.size() + 1));
-            params.add(minPassengers);
-        }
+
+        queryBuilder.add("maxPassengers - size(passengers) >= ?" + (params.size() + 1));
+        params.add(minPassengers != null ? Math.max(minPassengers, 1) : 1);
 
         return Trajet.<Trajet>list(queryBuilder.toString(), Sort.by("departureTime"), params.toArray())
                 .onItem().transformToMulti(rides -> Multi.createFrom().iterable(rides))
                 .onItem().transformToUniAndConcatenate(ride -> ride.getReservedSeats().chain(
-                        seats -> Mutiny.fetch(ride.car)
-                                .chain(car -> ride.driver.getRatings().onItem()
-                                        .transform((ratings) -> toRideDOT(ride,
-                                                seats, ratings, car)))))
+                        seats -> ride.driver.getRatings().onItem()
+                                .transform((ratings) -> toRideDOT(ride,
+                                        seats, ratings, null, null, null))))
                 .collect().asList();
     }
 
@@ -134,12 +135,26 @@ public class TrajetResource {
     @GET
     @Path("{id}")
     public Uni<RideDOT> getSingle(Long id) {
+        var userCip = userInfo.getPreferredUserName();
+
         return Trajet.<Trajet>findById(id)
                 .chain(ride -> ride.driver.getRatings()
                         .chain(ratings -> ride.getReservedSeats()
-                                .chain(seats -> Mutiny.fetch(ride.car).onItem()
-                                        .transform(car -> toRideDOT(ride, seats,
-                                                ratings, car)))));
+                                .chain(seats -> {
+                                    var state = (userCip != null)
+                                            ? ride.passengers.stream().filter(rp -> rp.passenger.cip.equals(userCip))
+                                                    .map(rp -> rp.state)
+                                                    .findFirst().orElse(null)
+                                            : null;
+
+                                    if (state == PassengerState.ACCEPTED) {
+                                        Mutiny.fetch(ride.car).chain(car -> Mutiny.fetch(ride.driver).onItem()
+                                                .transform(
+                                                        driver -> toRideDOT(ride, seats, ratings, car, state, driver)));
+                                    }
+
+                                    return Uni.createFrom().item(toRideDOT(ride, seats, ratings, null, state, null));
+                                })));
     }
 
     @PUT
@@ -230,10 +245,11 @@ public class TrajetResource {
                 .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
     }
 
-    private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car) {
+    private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car,
+            PassengerState request, Profile driver) {
         return new RideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
-                ride.maxPassengers, reservedSeats, ratings, car);
+                ride.maxPassengers, reservedSeats, ratings, car, request, driver);
     }
 
     private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, int reservedSeats, boolean mine) {
@@ -251,7 +267,7 @@ public class TrajetResource {
             Date departureTime,
             int maxPassengers,
             int reservedSeats,
-            ProfileRatings ratings, Car car) {
+            ProfileRatings ratings, Car car, PassengerState request, Profile driver) {
     }
 
     private record MyRideDOT(

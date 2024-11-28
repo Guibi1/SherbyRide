@@ -18,7 +18,7 @@ export default async function NavBar() {
     const profile = await getProfile();
 
     return (
-        <header className="px-4 lg:px-6 h-14 flex items-center border-b gap-8 border-primary sticky bg-background top-0 z-50">
+        <header className="px-4 lg:px-6 h-14 flex items-center border-b gap-8 border-primary bg-background z-50">
             <Link className="flex items-center justify-center" href="/">
                 <CarIcon className="h-6 w-6" />
                 <span className="ml-2 text-lg font-semibold">SherbyRide</span>

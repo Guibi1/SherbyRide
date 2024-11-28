@@ -1,7 +1,7 @@
 import ErrorOccured from "@/components/ErrorOccured";
 import { Separator } from "@/components/ui/separator";
 import { getProfile, getRide } from "@/lib/api";
-import { CarFrontIcon, CarIcon, LocateIcon, MapPinIcon, StarIcon, UserIcon } from "lucide-react";
+import { CarIcon, LocateIcon, MapPinIcon, StarIcon, UsersIcon } from "lucide-react";
 import BookingCard from "./BookingCard";
 
 type RideDetailsProps = { params: { id: string } };
@@ -69,26 +69,11 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                     <Separator orientation="horizontal" />
 
                     <div className="px-4 flex items-center gap-4">
-                        <UserIcon className="h-7 w-7" />
+                        <UsersIcon className="h-7 w-7" />
 
                         <div>
                             <p className="text-lg">{ride.maxPassengers - ride.reservedSeats} places disponibles</p>
                             <p className="text-muted-foreground">Sur {ride.maxPassengers} places totales</p>
-                        </div>
-                    </div>
-
-                    <Separator orientation="horizontal" />
-
-                    <div className="px-4 flex items-center gap-4">
-                        <CarFrontIcon className="h-7 w-7" />
-
-                        <div>
-                            <p className="text-lg">
-                                {ride.car.type} {ride.car.color.toLowerCase()}
-                            </p>
-                            <p className="text-muted-foreground">
-                                {ride.car.model}, {ride.car.licencePlate}
-                            </p>
                         </div>
                     </div>
 
@@ -106,7 +91,7 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
                     </div>
                 </section>
 
-                <BookingCard ride={params.id} profile={profile} />
+                <BookingCard ride={ride} profile={profile} />
             </div>
         </main>
     );
