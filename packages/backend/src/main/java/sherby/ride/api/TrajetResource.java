@@ -45,8 +45,8 @@ import sherby.ride.db.Trajet;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class TrajetResource {
-        @Inject
-        private UserInfo userInfo;
+    @Inject
+    private UserInfo userInfo;
 
     @GET
     public Uni<List<RideDOT>> get(
@@ -110,7 +110,7 @@ public class TrajetResource {
                                                             ride,
                                                             ratings,
                                                             seats,
-                                                            null, false))))
+                                                            null, null))))
                             .collect().asList();
 
                     return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides)
@@ -126,8 +126,11 @@ public class TrajetResource {
                                                             ride,
                                                             ratings,
                                                             seats,
-                                                            ride.driver,
-                                                            ride.driver.ratings.stream().anyMatch(rating -> rating.ride == ride && rating.evaluator == profile))))))
+                                                            rp.state == PassengerState.ACCEPTED ? ride.driver
+                                                                    : null,
+                                                            ride.driver.ratings.stream()
+                                                                    .anyMatch(rating -> rating.ride == ride
+                                                                            && rating.evaluator == profile))))))
                             .collect().asList()
                             .onItem().transform(passengerInRidesDOT -> Stream
                                     .concat(ridesDOT.stream(),
@@ -184,17 +187,17 @@ public class TrajetResource {
                                 })));
     }
 
-        @PUT
-        @Path("{id}")
-        @Authenticated
-        public Uni<Response> bookRide(Long id) {
-                String cip = userInfo.getPreferredUserName();
+    @PUT
+    @Path("{id}")
+    @Authenticated
+    public Uni<Response> bookRide(Long id) {
+        String cip = userInfo.getPreferredUserName();
 
-                return Panache.withTransaction(() -> Profile.<Profile>findById(cip)
-                                .chain(user -> Trajet.<Trajet>findById(id)
-                                                .chain(trajet -> {
-                                                        if (trajet.driver == user)
-                                                                return Uni.createFrom().nullItem();
+        return Panache.withTransaction(() -> Profile.<Profile>findById(cip)
+                .chain(user -> Trajet.<Trajet>findById(id)
+                        .chain(trajet -> {
+                            if (trajet.driver == user)
+                                return Uni.createFrom().nullItem();
 
                             return Mutiny.fetch(trajet.passengers).onItem()
                                     .transformToUni(passengers -> {
@@ -216,65 +219,65 @@ public class TrajetResource {
                 .onItem().ifNull().continueWith(Response.status(BAD_REQUEST)::build));
     }
 
-        @POST
-        @Authenticated
-        public Uni<Response> create(CreateRideDOT json) {
+    @POST
+    @Authenticated
+    public Uni<Response> create(CreateRideDOT json) {
 
-                if (!json.driver.equals(userInfo.getPreferredUserName())) {
-                        return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                                        .entity("Conducteur invalide").build());
-                }
-
-                if (json.departureLoc == null || json.departureLoc.isEmpty()) {
-                        return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                                        .entity("Vous devez entrer un lieu de départ").build());
-                }
-
-                if (json.arrivalLoc == null || json.arrivalLoc.isEmpty()) {
-                        return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                                        .entity("Vous devez entrer un lieu d'arrivée").build());
-                }
-
-                if (json.departureTime == null || json.departureTime.before(new Date())) {
-                        return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
-                                        .entity("Vous devez entrer un temps de départ").build());
-                }
-
-                return Panache.withTransaction(
-                                () -> Profile.<Profile>findById(json.driver)
-                                                .chain(driver -> Car.<Car>findById(json.licencePlate)
-                                                                .chain(car -> new Trajet(json.departureLoc,
-                                                                                json.arrivalLoc,
-                                                                                json.departureTime,
-                                                                                json.maxPassengers,
-                                                                                List.<RidePassenger>of(), driver, car)
-                                                                                .<Trajet>persist()))
-                                                .onItem().ifNotNull()
-                                                .transform(trajet -> Response.ok(trajet).status(CREATED).build())
-                                                .onItem().ifNull()
-                                                .continueWith(Response.ok().status(BAD_REQUEST)::build));
+        if (!json.driver.equals(userInfo.getPreferredUserName())) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Conducteur invalide").build());
         }
 
-        @DELETE
-        @Path("{id}")
-        @Authenticated
-        public Uni<Response> deleteRide(@PathParam("id") Long id) {
-                String userId = userInfo.getPreferredUserName();
-
-                return Panache.withTransaction(() -> Trajet.<Trajet>findById(id)
-                                .onItem().ifNotNull().transformToUni(trajet -> {
-                                        if (!trajet.driver.cip.equals(userId)) {
-                                                return Uni.createFrom().item(Response.status(FORBIDDEN).build());
-                                        }
-                                        if (trajet.departureTime.before(new Date())) {
-                                                return Uni.createFrom().item(Response.status(FORBIDDEN).build());
-                                        }
-
-                                        // Supprime le trajet
-                                        return trajet.delete().onItem().transform(deleted -> Response.ok().build());
-                                })
-                                .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
+        if (json.departureLoc == null || json.departureLoc.isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Vous devez entrer un lieu de départ").build());
         }
+
+        if (json.arrivalLoc == null || json.arrivalLoc.isEmpty()) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Vous devez entrer un lieu d'arrivée").build());
+        }
+
+        if (json.departureTime == null || json.departureTime.before(new Date())) {
+            return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Vous devez entrer un temps de départ").build());
+        }
+
+        return Panache.withTransaction(
+                () -> Profile.<Profile>findById(json.driver)
+                        .chain(driver -> Car.<Car>findById(json.licencePlate)
+                                .chain(car -> new Trajet(json.departureLoc,
+                                        json.arrivalLoc,
+                                        json.departureTime,
+                                        json.maxPassengers,
+                                        List.<RidePassenger>of(), driver, car)
+                                        .<Trajet>persist()))
+                        .onItem().ifNotNull()
+                        .transform(trajet -> Response.ok(trajet).status(CREATED).build())
+                        .onItem().ifNull()
+                        .continueWith(Response.ok().status(BAD_REQUEST)::build));
+    }
+
+    @DELETE
+    @Path("{id}")
+    @Authenticated
+    public Uni<Response> deleteRide(@PathParam("id") Long id) {
+        String userId = userInfo.getPreferredUserName();
+
+        return Panache.withTransaction(() -> Trajet.<Trajet>findById(id)
+                .onItem().ifNotNull().transformToUni(trajet -> {
+                    if (!trajet.driver.cip.equals(userId)) {
+                        return Uni.createFrom().item(Response.status(FORBIDDEN).build());
+                    }
+                    if (trajet.departureTime.before(new Date())) {
+                        return Uni.createFrom().item(Response.status(FORBIDDEN).build());
+                    }
+
+                    // Supprime le trajet
+                    return trajet.delete().onItem().transform(deleted -> Response.ok().build());
+                })
+                .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
+    }
 
     @GET
     @Path("{id}/passengerRequest")
@@ -309,14 +312,14 @@ public class TrajetResource {
                 ride.maxPassengers, reservedSeats, ratings, car, request, driver, passengers);
     }
 
-        private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, long reservedSeats, Profile driver,
-                        boolean rated) {
-                return new MyRideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
-                                ride.departureTime,
-                                ride.maxPassengers,
-                                reservedSeats,
-                                ratings, driver, rated);
-        }
+    private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, long reservedSeats, Profile driver,
+            Boolean rated) {
+        return new MyRideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
+                ride.departureTime,
+                ride.maxPassengers,
+                reservedSeats,
+                ratings, driver, rated);
+    }
 
     private record RideDOT(
             Long id,
@@ -328,15 +331,15 @@ public class TrajetResource {
             ProfileRatings ratings, Car car, String request, Profile driver, List<RidePassenger> passengers) {
     }
 
-        private record MyRideDOT(
-                        Long id,
-                        String departureLoc,
-                        String arrivalLoc,
-                        Date departureTime,
-                        int maxPassengers,
-                        long reservedSeats,
-                        ProfileRatings ratings, Profile driver, boolean rated) {
-        }
+    private record MyRideDOT(
+            Long id,
+            String departureLoc,
+            String arrivalLoc,
+            Date departureTime,
+            int maxPassengers,
+            long reservedSeats,
+            ProfileRatings ratings, Profile driver, Boolean rated) {
+    }
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,
             String driver, String licencePlate) {
