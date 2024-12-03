@@ -104,13 +104,16 @@ public class TrajetResource {
                             .onItem().transformToUniAndConcatenate(
                                     ride -> ride.driver.getRatings()
                                             .chain(ratings -> ride
-                                                    .getReservedSeats()
-                                                    .onItem()
-                                                    .transform(seats -> toMyRideDOT(
-                                                            ride,
-                                                            ratings,
-                                                            seats,
-                                                            null, null))))
+                                                    .getReservedSeats().chain(seats -> Mutiny.fetch(ride.passengers)
+                                                            .onItem()
+                                                            .transform(passengers -> toMyRideDOT(
+                                                                    ride,
+                                                                    ratings,
+                                                                    seats,
+                                                                    null,
+                                                                    null,
+                                                                    passengers.stream().anyMatch(
+                                                                            rp -> rp.state == PassengerState.PENDING))))))
                             .collect().asList();
 
                     return ridesDOTUni.chain(ridesDOT -> Mutiny.fetch(profile.passengerInRides)
@@ -130,7 +133,8 @@ public class TrajetResource {
                                                                     : null,
                                                             ride.driver.ratings.stream()
                                                                     .anyMatch(rating -> rating.ride == ride
-                                                                            && rating.evaluator == profile))))))
+                                                                            && rating.evaluator == profile),
+                                                            null)))))
                             .collect().asList()
                             .onItem().transform(passengerInRidesDOT -> Stream
                                     .concat(ridesDOT.stream(),
@@ -279,16 +283,6 @@ public class TrajetResource {
                 .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
     }
 
-    @GET
-    @Path("{id}/passengerRequest")
-    @Authenticated
-    public Uni<List<Profile>> getPendingPassengers(@PathParam("id") Long rideId) {
-        return RidePassenger.<RidePassenger>list("ride.id = ?1 and state = ?2", rideId, PassengerState.PENDING)
-                .onItem().transformToMulti(rides -> Multi.createFrom().iterable(rides))
-                .onItem().transform(rp -> rp.passenger)
-                .collect().asList();
-    }
-
     @POST
     @Path("{id}/passengerRequest")
     @Authenticated
@@ -313,12 +307,12 @@ public class TrajetResource {
     }
 
     private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, long reservedSeats, Profile driver,
-            Boolean rated) {
+            Boolean rated, Boolean requests) {
         return new MyRideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
                 ride.maxPassengers,
                 reservedSeats,
-                ratings, driver, rated);
+                ratings, driver, rated, requests);
     }
 
     private record RideDOT(
@@ -338,7 +332,7 @@ public class TrajetResource {
             Date departureTime,
             int maxPassengers,
             long reservedSeats,
-            ProfileRatings ratings, Profile driver, Boolean rated) {
+            ProfileRatings ratings, Profile driver, Boolean rated, Boolean requests) {
     }
 
     private record CreateRideDOT(String departureLoc, String arrivalLoc, Date departureTime, int maxPassengers,

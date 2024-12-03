@@ -97,21 +97,6 @@ export async function getCars(): Promise<Car[] | string> {
     return json as Car[];
 }
 
-export async function getRideRequests(ride: Ride): Promise<Profile[] | string> {
-    const session = isServer ? await auth() : await getSession();
-
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (session) headers.Authorization = `Bearer ${session.accessToken}`;
-    const res = await fetch(`http://localhost:8080/trajet/${ride.id}/passengerRequest`, { headers });
-
-    if (!res.ok) {
-        return res.statusText;
-    }
-
-    const json = await res.json();
-    return json as Profile[];
-}
-
 export async function setState(ride: Ride, passenger: Profile, accepted: boolean): Promise<RidePassenger | string> {
     const session = isServer ? await auth() : await getSession();
 

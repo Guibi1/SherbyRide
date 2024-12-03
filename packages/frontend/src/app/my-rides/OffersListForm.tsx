@@ -7,11 +7,10 @@ import { Button } from "@/components/ui/button";
 import { getMyRides } from "@/lib/api";
 import type { MyRide } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { PlusIcon } from "lucide-react";
+import { BellIcon, PlusIcon } from "lucide-react";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
-import DriverNotificationButton from "./DriverNotificationButton";
 
 export default function OffersListForm(props: { rides: MyRide[] }) {
     const { data: rides, refetch } = useQuery({
@@ -46,8 +45,8 @@ export default function OffersListForm(props: { rides: MyRide[] }) {
         );
     }
 
-    const driverRides = rides.filter((ride) => ride.rated === null); // Trajets où l'utilisateur est conducteur
-    const passengerRides = rides.filter((ride) => ride.rated !== null); // Trajets où l'utilisateur est passager
+    const driverRides = rides.filter((ride) => "requests" in ride); // Trajets où l'utilisateur est conducteur
+    const passengerRides = rides.filter((ride) => "rated" in ride); // Trajets où l'utilisateur est passager
 
     return (
         <div className="container">
@@ -60,7 +59,10 @@ export default function OffersListForm(props: { rides: MyRide[] }) {
                         {driverRides.map((ride) => (
                             <RideCard ride={ride} key={ride.id}>
                                 <div className="flex justify-end gap-2">
-                                    <DriverNotificationButton ride={ride} />
+                                    {ride.requests && <Button variant="outline" className="pointer-events-none bg-yellow-100 text-yellow-800 hover:bg-yellow-200">
+                                        <BellIcon className="mr-2 h-4 w-4" />
+                                        Nouvelle demande !
+                                    </Button>}
 
                                     <Button asChild>
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
