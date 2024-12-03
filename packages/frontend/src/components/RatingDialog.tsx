@@ -2,18 +2,18 @@
 
 import { Button } from "@/components/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Form, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { getProfile } from "@/lib/api";
-import type { MyRide, Profile, Ride } from "@/lib/types";
+import { getMyRides, getProfile } from "@/lib/api";
+import type { MyRide } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
@@ -33,10 +33,14 @@ const formSchema = z.object({
 type NewRatingDialogProps = { ride: MyRide; children?: ReactNode };
 
 export default function NewRatingDialog({ children, ride }: NewRatingDialogProps) {
-    console.log(ride);
     const { data: user } = useQuery({
         queryKey: ["user-profile"],
         queryFn: () => getProfile(false),
+    });
+
+    const { refetch } = useQuery({
+        queryKey: ["my-rides"],
+        queryFn: getMyRides,
     });
 
     const [open, setOpen] = useState(false);
@@ -62,6 +66,7 @@ export default function NewRatingDialog({ children, ride }: NewRatingDialogProps
         },
         async onSuccess() {
             toast.success("Votre véhicule à été créé avec succès");
+            refetch();
             setOpen(false);
         },
         onError(error) {

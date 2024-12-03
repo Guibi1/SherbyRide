@@ -5,7 +5,7 @@ import RatingDialog from "@/components/RatingDialog";
 import RideCard from "@/components/RideCard";
 import { Button } from "@/components/ui/button";
 import { getMyRides } from "@/lib/api";
-import type { MyRide, Profile, Ride } from "@/lib/types";
+import type { MyRide } from "@/lib/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
 import { getSession } from "next-auth/react";
@@ -46,8 +46,8 @@ export default function OffersListForm(props: { rides: MyRide[] }) {
         );
     }
 
-    const driverRides = rides.filter((ride) => !ride.driver); // Trajets où l'utilisateur est conducteur
-    const passengerRides = rides.filter((ride) => ride.driver); // Trajets où l'utilisateur est passager
+    const driverRides = rides.filter((ride) => ride.rated === null); // Trajets où l'utilisateur est conducteur
+    const passengerRides = rides.filter((ride) => ride.rated !== null); // Trajets où l'utilisateur est passager
 
     return (
         <div className="container">
@@ -60,7 +60,7 @@ export default function OffersListForm(props: { rides: MyRide[] }) {
                         {driverRides.map((ride) => (
                             <RideCard ride={ride} key={ride.id}>
                                 <div className="flex justify-end gap-2">
-                                    <DriverNotificationButton ride={ride}/>
+                                    <DriverNotificationButton ride={ride} />
 
                                     <Button asChild>
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
@@ -87,15 +87,20 @@ export default function OffersListForm(props: { rides: MyRide[] }) {
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
                                     </Button>
 
-                                    <RatingDialog ride={ride}>
-                                        <Button
-                                            className="relative rounded-sm justify-start font-normal py-1.5 pr-2 pl-8 text-sm outline-none"
-                                            variant="ghost"
-                                        >
-                                            <PlusIcon size={12} className="stroke-muted-foreground absolute left-2" />
-                                            Note le conducteur
-                                        </Button>
-                                    </RatingDialog>
+                                    {!ride.rated && ride.driver && (
+                                        <RatingDialog ride={ride}>
+                                            <Button
+                                                className="relative rounded-sm justify-start font-normal py-1.5 pr-2 pl-8 text-sm outline-none"
+                                                variant="ghost"
+                                            >
+                                                <PlusIcon
+                                                    size={12}
+                                                    className="stroke-muted-foreground absolute left-2"
+                                                />
+                                                Note le conducteur
+                                            </Button>
+                                        </RatingDialog>
+                                    )}
                                 </div>
                             </RideCard>
                         ))}

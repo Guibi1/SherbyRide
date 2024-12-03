@@ -99,7 +99,6 @@ public class ProfileResource {
     @POST
     @Path("/{cip}/rating")
     public Uni<Response> createRating(@PathParam("cip") String cip, CreateRatingDOT json) {
-
         if (json.evaluator == null || json.evaluator.isEmpty()) {
             return Uni.createFrom().item(Response.status(Response.Status.BAD_REQUEST).build());
         }
@@ -121,9 +120,11 @@ public class ProfileResource {
         }
 
         return Panache.withTransaction(() -> Rating
-                .<Rating>list("evaluator.id = ?1 AND evaluated.id = ?2 AND ride = ?3", json.evaluator, json.evaluated,
+                .<Rating>find("evaluator.id = ?1 AND evaluated.id = ?2 AND ride.id = ?3", json.evaluator,
+                        json.evaluated,
                         json.ride)
-                .onItem().ifNotNull().transform(n -> Response.status(BAD_REQUEST).build())
+                .firstResult()
+                .onItem().ifNotNull().transform(n -> Response.ok(n).status(BAD_REQUEST).build())
                 .onItem().ifNull().switchTo(() -> Trajet.<Trajet>findById(json.ride)
                         .chain(trajet -> {
                             if (trajet.departureTime.after(new Date())) {
