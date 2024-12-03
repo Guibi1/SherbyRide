@@ -53,6 +53,28 @@ export default function BookingCard({ profile, ...props }: BookingCardProps) {
         );
     }
 
+    if (ride.request === "MINE") {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>État de votre trajet</CardTitle>
+                </CardHeader>
+
+                <CardContent className="flex flex-col">
+                    <p>Passagers</p>
+
+                    <ul className="divide-y">
+                        {ride.passengers.map((p) => (
+                            <li className="px-4 py-2" key={p.passenger.cip}>
+                                {p.passenger.name} {p.state}
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+            </Card>
+        );
+    }
+
     if (ride.request === "PENDING") {
         return (
             <Card>

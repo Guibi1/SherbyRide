@@ -90,7 +90,7 @@ public class TrajetResource {
                 .onItem().transformToUniAndConcatenate(ride -> ride.getReservedSeats().chain(
                         seats -> ride.driver.getRatings().onItem()
                                 .transform((ratings) -> toRideDOT(ride,
-                                        seats, ratings, null, null, null))))
+                                        seats, ratings, null, null, null, null))))
                 .collect().asList();
     }
 
@@ -144,6 +144,14 @@ public class TrajetResource {
                 .chain(ride -> ride.driver.getRatings()
                         .chain(ratings -> ride.getReservedSeats()
                                 .chain(seats -> {
+                                    if (ride.driver.cip.equals(userCip)) {
+                                        return Mutiny.fetch(ride.car)
+                                                .chain(car -> Mutiny.fetch(ride.passengers).onItem()
+                                                        .transform(
+                                                                rp -> toRideDOT(ride, seats, ratings, car, "MINE",
+                                                                        null, rp)));
+                                    }
+
                                     var state = (userCip != null)
                                             ? ride.passengers.stream().filter(rp -> rp.passenger.cip.equals(userCip))
                                                     .map(rp -> rp.state)
@@ -151,12 +159,14 @@ public class TrajetResource {
                                             : null;
 
                                     if (state == PassengerState.ACCEPTED) {
-                                        Mutiny.fetch(ride.car).chain(car -> Mutiny.fetch(ride.driver).onItem()
+                                        return Mutiny.fetch(ride.car).chain(car -> Mutiny.fetch(ride.driver).onItem()
                                                 .transform(
-                                                        driver -> toRideDOT(ride, seats, ratings, car, state, driver)));
+                                                        driver -> toRideDOT(ride, seats, ratings, car, state.toString(),
+                                                                driver, null)));
                                     }
 
-                                    return Uni.createFrom().item(toRideDOT(ride, seats, ratings, null, state, null));
+                                    return Uni.createFrom()
+                                            .item(toRideDOT(ride, seats, ratings, null, state.toString(), null, null));
                                 })));
     }
 
@@ -249,10 +259,10 @@ public class TrajetResource {
     }
 
     private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car,
-            PassengerState request, Profile driver) {
+            String request, Profile driver, List<RidePassenger> passengers) {
         return new RideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
-                ride.maxPassengers, reservedSeats, ratings, car, request, driver);
+                ride.maxPassengers, reservedSeats, ratings, car, request, driver, passengers);
     }
 
     private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, int reservedSeats, boolean mine) {
@@ -270,7 +280,7 @@ public class TrajetResource {
             Date departureTime,
             int maxPassengers,
             int reservedSeats,
-            ProfileRatings ratings, Car car, PassengerState request, Profile driver) {
+            ProfileRatings ratings, Car car, String request, Profile driver, List<RidePassenger> passengers) {
     }
 
     private record MyRideDOT(

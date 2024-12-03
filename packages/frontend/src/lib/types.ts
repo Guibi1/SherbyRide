@@ -21,6 +21,7 @@ type BaseRide = {
     ratings: ProfileRatings;
 };
 export type Ride =
+    | (BaseRide & { request?: "MINE"; car: Car; passengers: { passenger: Profile, state: "PENDING" | "REFUSED" | "ACCEPTED" }[] })
     | (BaseRide & { request?: "PENDING" | "REFUSED" })
     | (BaseRide & { request: "ACCEPTED"; car: Car; driver: Profile });
 
