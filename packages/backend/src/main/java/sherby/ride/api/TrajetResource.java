@@ -67,12 +67,12 @@ public class TrajetResource {
             params.add(userInfo.getPreferredUserName());
         }
         if (departure != null && !departure.isEmpty()) {
-            queryBuilder.add("departureLoc = ?" + (params.size() + 1));
-            params.add(departure);
+            queryBuilder.add("departureLoc ILIKE ?" + (params.size() + 1));
+            params.add("%" + departure + "%");
         }
         if (arrival != null && !arrival.isEmpty()) {
-            queryBuilder.add("arrivalLoc = ?" + (params.size() + 1));
-            params.add(arrival);
+            queryBuilder.add("arrivalLoc ILIKE ?" + (params.size() + 1));
+            params.add("%" + arrival + "%");
         }
         if (date != null) {
             queryBuilder.add("departureTime = ?" + (params.size() + 1));
