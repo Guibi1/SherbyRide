@@ -9,28 +9,26 @@ export default async function HomePage() {
     const rides = await getRides({ from: "Sherbrooke" });
 
     return (
-        <main>
-            <section className="py-12 md:py-24 lg:py-32 xl:py-48">
-                <div className="container px-4 md:px-6">
-                    <div className="flex flex-col items-center space-y-4 text-center">
-                        <div className="space-y-2">
-                            <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
-                                Trouve ton trajet parfait
-                            </h1>
+        <main className="flex flex-col">
+            <section className="flex-1 grid py-12 md:py-24 lg:py-32 xl:py-48 container px-4 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div className="space-y-2">
+                        <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl/none">
+                            Trouve ton trajet parfait
+                        </h1>
 
-                            <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                                Économise de l'argent, réduit tes émissions et rencontre de nouveaux amis.
-                            </p>
-                        </div>
-
-                        <form action="/rides" method="get" className="flex gap-2 w-full max-w-sm">
-                            <Input name="to" className="flex-1" placeholder="Entre ta destination" type="text" />
-                            <Button type="submit">
-                                <SearchIcon className="h-4 w-4" />
-                                <span className="sr-only">Recherche</span>
-                            </Button>
-                        </form>
+                        <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
+                            Économise de l'argent, réduit tes émissions et rencontre de nouveaux amis.
+                        </p>
                     </div>
+
+                    <form action="/rides" method="get" className="flex gap-2 w-full max-w-sm">
+                        <Input name="to" className="flex-1" placeholder="Entre ta destination" type="text" />
+                        <Button type="submit">
+                            <SearchIcon className="h-4 w-4" />
+                            <span className="sr-only">Recherche</span>
+                        </Button>
+                    </form>
                 </div>
             </section>
 

@@ -78,7 +78,7 @@ public class TrajetResource {
             queryBuilder.add("departureTime = ?" + (params.size() + 1));
             params.add(Date.from(date));
         } else {
-            queryBuilder.add("departureTime <= ?" + (params.size() + 1));
+            queryBuilder.add("departureTime >= ?" + (params.size() + 1));
             params.add(new Date());
         }
 
@@ -163,7 +163,7 @@ public class TrajetResource {
                                     }
 
                                     return RidePassenger
-                                            .<RidePassenger>find("ride.id = ?1 AND passenger.cip != ?2",
+                                            .<RidePassenger>find("ride.id = ?1 AND passenger.cip = ?2",
                                                     ride.id, userCip)
                                             .firstResult().chain(rp -> {
                                                 if (rp == null) {
@@ -202,7 +202,7 @@ public class TrajetResource {
                             return Mutiny.fetch(trajet.passengers).onItem()
                                     .transformToUni(passengers -> {
                                         if (trajet.passengers.stream().anyMatch(
-                                                rp -> rp.getPassenger()
+                                                rp -> rp.passenger
                                                         .equals(user))) {
                                             return Uni.createFrom()
                                                     .nullItem();
@@ -285,7 +285,7 @@ public class TrajetResource {
     public Uni<List<Profile>> getPendingPassengers(@PathParam("id") Long rideId) {
         return RidePassenger.<RidePassenger>list("ride.id = ?1 and state = ?2", rideId, PassengerState.PENDING)
                 .onItem().transformToMulti(rides -> Multi.createFrom().iterable(rides))
-                .onItem().transform(rp -> rp.getPassenger())
+                .onItem().transform(rp -> rp.passenger)
                 .collect().asList();
     }
 

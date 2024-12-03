@@ -28,8 +28,4 @@ public class RidePassenger extends PanacheEntity {
         this.passenger = passenger;
         this.state = state;
     }
-
-    public Profile getPassenger() {
-        return passenger;
-    }
 }
