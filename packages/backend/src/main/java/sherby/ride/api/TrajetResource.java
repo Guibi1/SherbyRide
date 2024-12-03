@@ -77,6 +77,9 @@ public class TrajetResource {
         if (date != null) {
             queryBuilder.add("departureTime = ?" + (params.size() + 1));
             params.add(Date.from(date));
+        } else {
+            queryBuilder.add("departureTime >= ?" + (params.size() + 1));
+            params.add(new Date());
         }
 
         queryBuilder.add("maxPassengers - size(passengers) >= ?" + (params.size() + 1));
