@@ -51,9 +51,13 @@ public class Trajet extends PanacheEntity {
     public List<Rating> ratings;
 
     @JsonIgnore
-    public Uni<Integer> getReservedSeats() {
-        return Panache
-                .withTransaction(() -> Mutiny.fetch(passengers).onItem().transform(passengers -> passengers.size()));
+    public Uni<List<RidePassenger>> getCurrentPassengers() {
+        return RidePassenger.<RidePassenger>list("ride.id = ?1 AND state != ?2", this.id, PassengerState.REFUSED);
+    }
+
+    @JsonIgnore
+    public Uni<Long> getReservedSeats() {
+        return RidePassenger.count("ride.id = ?1 AND state != ?2", this.id, PassengerState.REFUSED);
     }
 
     public Trajet() {

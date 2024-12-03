@@ -1,8 +1,8 @@
 import ErrorOccured from "@/components/ErrorOccured";
-import { Separator } from "@/components/ui/separator";
 import { getProfile, getRide } from "@/lib/api";
-import { CarIcon, LocateIcon, MapPinIcon, StarIcon, UsersIcon } from "lucide-react";
+import { CarIcon } from "lucide-react";
 import BookingCard from "./BookingCard";
+import RideDetails from "./RideDetails";
 
 type RideDetailsProps = { params: { id: string } };
 
@@ -41,55 +41,7 @@ export default async function RideDetailsPage({ params }: RideDetailsProps) {
             </div>
 
             <div className="grid gap-8 lg:gap-16 lg:grid-cols-2 items-start">
-                <section className="flex flex-col gap-2">
-                    <div className="px-4 flex items-center gap-4">
-                        <LocateIcon className="h-7 w-7" />
-
-                        <div>
-                            <p className="text-lg">
-                                {ride.departureTime.toLocaleTimeString("fr-CA", { timeStyle: "short" })}
-                                {" à "}
-                                {ride.departureLoc}
-                            </p>
-                            <p className="text-muted-foreground">Adresse complete ici</p>
-                        </div>
-                    </div>
-
-                    <Separator orientation="horizontal" />
-
-                    <div className="px-4 flex items-center gap-4">
-                        <MapPinIcon className="h-7 w-7" />
-
-                        <div>
-                            <p className="text-lg">{ride.arrivalLoc}</p>
-                            <p className="text-muted-foreground">Adresse complete ici</p>
-                        </div>
-                    </div>
-
-                    <Separator orientation="horizontal" />
-
-                    <div className="px-4 flex items-center gap-4">
-                        <UsersIcon className="h-7 w-7" />
-
-                        <div>
-                            <p className="text-lg">{ride.maxPassengers - ride.reservedSeats} places disponibles</p>
-                            <p className="text-muted-foreground">Sur {ride.maxPassengers} places totales</p>
-                        </div>
-                    </div>
-
-                    <Separator orientation="horizontal" />
-
-                    <div className="px-4 flex items-center gap-4">
-                        <StarIcon className="h-7 w-7" />
-
-                        <div>
-                            <p className="text-lg">Conducteur {ride.ratings.average >= 3 ? "fiable" : "douteux"}</p>
-                            <p className="text-muted-foreground">
-                                Évaluation moyene de {ride.ratings.average} par {ride.ratings.count} personnes
-                            </p>
-                        </div>
-                    </div>
-                </section>
+                <RideDetails ride={ride} />
 
                 <BookingCard ride={ride} profile={profile} />
             </div>

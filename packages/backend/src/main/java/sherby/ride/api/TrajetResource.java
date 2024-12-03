@@ -78,7 +78,7 @@ public class TrajetResource {
             queryBuilder.add("departureTime = ?" + (params.size() + 1));
             params.add(Date.from(date));
         } else {
-            queryBuilder.add("departureTime >= ?" + (params.size() + 1));
+            queryBuilder.add("departureTime <= ?" + (params.size() + 1));
             params.add(new Date());
         }
 
@@ -145,29 +145,41 @@ public class TrajetResource {
                 .chain(ride -> ride.driver.getRatings()
                         .chain(ratings -> ride.getReservedSeats()
                                 .chain(seats -> {
+                                    if (userCip == null) {
+                                        return Uni.createFrom()
+                                                .item(toRideDOT(ride, seats, ratings, null, null, null, null));
+                                    }
+
                                     if (ride.driver.cip.equals(userCip)) {
                                         return Mutiny.fetch(ride.car)
-                                                .chain(car -> Mutiny.fetch(ride.passengers).onItem()
+                                                .chain(car -> ride.getCurrentPassengers().onItem()
                                                         .transform(
-                                                                rp -> toRideDOT(ride, seats, ratings, car, "MINE",
-                                                                        null, rp)));
+                                                                rp -> toRideDOT(ride, seats, ratings, car, "MINE", null,
+                                                                        rp)));
                                     }
 
-                                    var state = (userCip != null)
-                                            ? ride.passengers.stream().filter(rp -> rp.passenger.cip.equals(userCip))
-                                                    .map(rp -> rp.state)
-                                                    .findFirst().orElse(null)
-                                            : null;
+                                    return RidePassenger
+                                            .<RidePassenger>find("ride.id = ?1 AND passenger.cip != ?2",
+                                                    ride.id, userCip)
+                                            .firstResult().chain(rp -> {
+                                                if (rp == null) {
+                                                    return Uni.createFrom().item(
+                                                            toRideDOT(ride, seats, ratings, null, null, null, null));
+                                                }
 
-                                    if (state == PassengerState.ACCEPTED) {
-                                        return Mutiny.fetch(ride.car).chain(car -> Mutiny.fetch(ride.driver).onItem()
-                                                .transform(
-                                                        driver -> toRideDOT(ride, seats, ratings, car, state.toString(),
-                                                                driver, null)));
-                                    }
+                                                if (rp.state == PassengerState.ACCEPTED) {
+                                                    return Mutiny.fetch(ride.car)
+                                                            .chain(car -> Mutiny.fetch(ride.driver).onItem()
+                                                                    .transform(
+                                                                            driver -> toRideDOT(ride, seats, ratings,
+                                                                                    car, rp.state.toString(),
+                                                                                    driver, null)));
+                                                }
 
-                                    return Uni.createFrom()
-                                            .item(toRideDOT(ride, seats, ratings, null, state.toString(), null, null));
+                                                return Uni.createFrom().item(toRideDOT(ride, seats, ratings, null,
+                                                        rp.state.toString(), null, null));
+                                            });
+
                                 })));
     }
 
@@ -289,14 +301,14 @@ public class TrajetResource {
                 .onItem().ifNull().continueWith(Response.status(NOT_FOUND)::build));
     }
 
-    private static RideDOT toRideDOT(Trajet ride, int reservedSeats, ProfileRatings ratings, Car car,
-                String request, Profile driver, List<RidePassenger> passengers) {
+    private static RideDOT toRideDOT(Trajet ride, long reservedSeats, ProfileRatings ratings, Car car,
+            String request, Profile driver, List<RidePassenger> passengers) {
         return new RideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
                 ride.maxPassengers, reservedSeats, ratings, car, request, driver, passengers);
     }
 
-    private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, int reservedSeats, boolean mine) {
+    private static MyRideDOT toMyRideDOT(Trajet ride, ProfileRatings ratings, long reservedSeats, boolean mine) {
         return new MyRideDOT(ride.id, ride.departureLoc, ride.arrivalLoc,
                 ride.departureTime,
                 ride.maxPassengers,
@@ -310,7 +322,7 @@ public class TrajetResource {
             String arrivalLoc,
             Date departureTime,
             int maxPassengers,
-            int reservedSeats,
+            long reservedSeats,
             ProfileRatings ratings, Car car, String request, Profile driver, List<RidePassenger> passengers) {
     }
 
@@ -320,7 +332,7 @@ public class TrajetResource {
             String arrivalLoc,
             Date departureTime,
             int maxPassengers,
-            int reservedSeats,
+            long reservedSeats,
             ProfileRatings ratings, boolean mine) {
     }
 

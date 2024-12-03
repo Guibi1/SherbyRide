@@ -5,7 +5,7 @@ import RideCard from "@/components/RideCard";
 import { Button } from "@/components/ui/button";
 import { getMyRides } from "@/lib/api";
 import type { Ride } from "@/lib/types";
-import { useMutation, usePrefetchQuery, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getSession } from "next-auth/react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ export default function OffersListForm(props: { rides: (Ride & { mine: boolean }
                             <RideCard ride={ride} key={ride.id}>
                                 <div className="flex justify-end gap-2">
                                     <DriverNotificationButton ride={ride}/>
+
                                     <Button asChild>
                                         <Link href={`/rides/${ride.id}`}>Voir les détails</Link>
                                     </Button>
