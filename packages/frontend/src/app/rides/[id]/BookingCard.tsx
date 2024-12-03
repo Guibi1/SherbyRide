@@ -145,8 +145,8 @@ export default function BookingCard({ profile, ...props }: BookingCardProps) {
                 </CardHeader>
 
                 <CardContent className="flex flex-col gap-2 items-center">
-                    <p>Le conducteur a accepté votre demande de covoiturage!</p>
-                    <p>
+                    <p className="">Le conducteur a accepté votre demande de covoiturage!</p>
+                    <p className="text-center">
                         Assurez vous d'arriver au moins 15 minutes en avance au site de rendez-vous afin de ne pas
                         manquer votre lift.
                     </p>

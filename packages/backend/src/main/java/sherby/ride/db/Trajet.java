@@ -3,11 +3,8 @@ package sherby.ride.db;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.reactive.mutiny.Mutiny;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.quarkus.hibernate.reactive.panache.Panache;
 import io.quarkus.hibernate.reactive.panache.PanacheEntity;
 import io.smallrye.mutiny.Uni;
 import jakarta.persistence.Cacheable;
